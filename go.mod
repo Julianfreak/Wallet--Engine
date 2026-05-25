@@ -1,3 +1,3 @@
-module github.com/Julianfreak/wallet-engine
+module github.com/Julianfreak/Wallet--Engine
 
 go 1.23.3

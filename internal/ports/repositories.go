@@ -1,6 +1,6 @@
 package ports
 
-import "github.com/Julianfreak/wallet-engine/internal/domain"
+import "github.com/Julianfreak/Wallet--Engine/internal/domain"
 
 // AccountRepository es el puerto de salida para el almacenamiento de cuentas.
 // Cualquier base de datos (Postgres, MySQL, Mock) deberá implementar estas funciones.
