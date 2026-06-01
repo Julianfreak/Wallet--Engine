@@ -26,7 +26,7 @@ func main() {
 
 	// 3. EJECUTAR CASO DE USO Y GESTIONAR ERRORES
 	// Intentamos transferir $300 de Julian a Mercado Libre
-	err := transferService.Execute("A1", "A2", 300.0)
+	err := transferService.Execute("A1", "A2", 5000.0)
 
 	// En Go, los errores son valores.
 	if err != nil {

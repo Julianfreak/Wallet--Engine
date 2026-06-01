@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   postgres:
@@ -12,12 +11,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - wallet_network
-
-networks:
-  wallet_network:
-    driver: bridge
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
 
 volumes:
   postgres_data:
