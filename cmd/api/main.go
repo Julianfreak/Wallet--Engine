@@ -1,44 +1,60 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	// 1. INICIALIZAR ADAPTADORES
-	accountRepo := repository.NewAccountMemoryRepo()
-	transactionRepo := repository.NewTransactionMemoryRepo()
+	fmt.Println("--- Iniciando Billetera Digital con PostgreSQL ---")
 
-	// Simulamos que ya existen dos cuentas en nuestra "base de datos"
+	// 1. CONECTAR A LA BASE DE DATOS REAL (Docker)
+	// Usamos las mismas credenciales que definimos en el docker-compose.yml
+	connStr := "postgres://wallet_user:wallet_password@localhost:5432/wallet_db?sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("Error al abrir la conexión: %v", err)
+	}
+	defer db.Close() // Nos aseguramos de cerrar la conexión al apagar la app
+
+	// Verificar que la base de datos realmente responda
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Base de datos inaccesible: %v", err)
+	}
+	fmt.Println("Conexión exitosa a PostgreSQL en Docker.")
+
+	// 2. INICIALIZAR LOS ADAPTADORES REALES
+	accountRepo := repository.NewPostgresAccountRepository(db)
+	transactionRepo := repository.NewPostgresTransactionRepository(db)
+
+	// Simulamos la creación/actualización de las cuentas directamente en las tablas SQL
+	fmt.Println("Sembrando datos iniciales en Postgres...")
 	accountRepo.Save(&domain.Account{ID: "A1", Owner: "Julian", Balance: 1000.0})
 	accountRepo.Save(&domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0.0})
 
-	// 2. INYECCIÓN DE DEPENDENCIAS
-	// Pasamos los adaptadores al constructor del servicio.
+	// 3. INYECCIÓN DE DEPENDENCIAS (El Switch)
+	// El servicio recibe los adaptadores de Postgres sin protestar, porque cumplen el contrato.
 	transferService := application.NewTransferService(accountRepo, transactionRepo)
 
-	fmt.Println("--- Iniciando simulación de Billetera Digital ---")
-
-	// 3. EJECUTAR CASO DE USO Y GESTIONAR ERRORES
-	// Intentamos transferir $300 de Julian a Mercado Libre
-	err := transferService.Execute("A1", "A2", 5000.0)
-
-	// En Go, los errores son valores.
+	// 4. EJECUTAR TRANSFERENCIA REAL
+	fmt.Println("Procesando transferencia de $300 de Julian a Mercado Libre...")
+	err = transferService.Execute("A1", "A2", 300.0)
 	if err != nil {
 		log.Fatalf("La transferencia falló: %v", err)
 	}
+	fmt.Println("¡Transferencia procesada y guardada con éxito en los discos de Postgres!")
 
-	fmt.Println("¡Transferencia exitosa!")
-
-	// 4. VERIFICAR RESULTADOS FINALES
+	// 5. CONSULTAR LOS SALDOS FINALES DIRECTO DESDE POSTGRES
 	julianAcc, _ := accountRepo.GetByID("A1")
 	mlAcc, _ := accountRepo.GetByID("A2")
 
-	fmt.Printf("Saldo de %s: $%.2f\n", julianAcc.Owner, julianAcc.Balance)
-	fmt.Printf("Saldo de %s: $%.2f\n", mlAcc.Owner, mlAcc.Balance)
+	fmt.Printf("\n Saldos finales en la Base de Datos:\n")
+	fmt.Printf("- %s: $%.2f\n", julianAcc.Owner, julianAcc.Balance)
+	fmt.Printf("- %s: $%.2f\n", mlAcc.Owner, mlAcc.Balance)
 }
