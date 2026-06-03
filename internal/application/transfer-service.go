@@ -5,6 +5,7 @@ import (
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	"github.com/Julianfreak/Wallet--Engine/internal/ports"
+	"github.com/google/uuid"
 )
 
 // Errores específicos de la aplicación
@@ -47,7 +48,8 @@ func (s *TransferService) Execute(fromID, toID string, amount float64) error {
 		return err
 	}
 	// 3. Crear el registro histórico de la transacción
-	tx := domain.NewTransaction("tx-123", fromID, toID, amount)
+	txID := uuid.NewString()
+	tx := domain.NewTransaction(txID, fromID, toID, amount)
 	// 4. Guardar los nuevos estados usando los puertos
 	if err := s.accountRepo.Save(fromAccount); err != nil {
 		return err
