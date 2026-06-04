@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
@@ -11,23 +12,35 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
+}
+
 func main() {
 	fmt.Println("--- Iniciando Billetera Digital con PostgreSQL ---")
 
+	dbUser := getEnv("DB_USER", "wallet_user")
+	dbPass := getEnv("DB_PASSWORD", "wallet_password")
+	dbHost := getEnv("DB_HOST", "localhost")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbName := getEnv("DB_NAME", "wallet_db")
+
 	// 1. CONECTAR A LA BASE DE DATOS REAL (Docker)
-	// Usamos las mismas credenciales que definimos en el docker-compose.yml
-	connStr := "postgres://wallet_user:wallet_password@localhost:5432/wallet_db?sslmode=disable"
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPass, dbHost, dbPort, dbName)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Error al abrir la conexión: %v", err)
 	}
-	defer db.Close() // Nos aseguramos de cerrar la conexión al apagar la app
+	defer db.Close()
 
 	// Verificar que la base de datos realmente responda
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Base de datos inaccesible: %v", err)
 	}
-	fmt.Println("Conexión exitosa a PostgreSQL en Docker.")
+	fmt.Printf("Conexión exitosa a PostgreSQL en %s:%s.\n", dbHost, dbPort)
 
 	// 2. INICIALIZAR LOS ADAPTADORES REALES
 	accountRepo := repository.NewPostgresAccountRepository(db)
