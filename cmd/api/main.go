@@ -9,6 +9,7 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -21,6 +22,15 @@ func getEnv(key, fallback string) string {
 
 func main() {
 	fmt.Println("--- Iniciando Billetera Digital con PostgreSQL ---")
+
+	err := godotenv.Load()
+
+	if err != nil {
+		// En producción no habrá archivo .env, por eso solo ponemos un aviso y no un log.Fatal
+		fmt.Println("ℹNo se encontró el archivo .env, usando variables de entorno del sistema")
+	} else {
+		fmt.Println("Variables de configuración cargadas desde el archivo .env con éxito.")
+	}
 
 	dbUser := getEnv("DB_USER", "wallet_user")
 	dbPass := getEnv("DB_PASSWORD", "wallet_password")
