@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -24,10 +25,8 @@ func main() {
 	fmt.Println("--- Iniciando Billetera Digital con PostgreSQL ---")
 
 	err := godotenv.Load()
-
 	if err != nil {
-		// En producción no habrá archivo .env, por eso solo ponemos un aviso y no un log.Fatal
-		fmt.Println("ℹNo se encontró el archivo .env, usando variables de entorno del sistema")
+		fmt.Println("ℹNo se encontró el archivo .env, usando variables del sistema")
 	} else {
 		fmt.Println("Variables de configuración cargadas desde el archivo .env con éxito.")
 	}
@@ -38,44 +37,44 @@ func main() {
 	dbPort := getEnv("DB_PORT", "5432")
 	dbName := getEnv("DB_NAME", "wallet_db")
 
-	// 1. CONECTAR A LA BASE DE DATOS REAL (Docker)
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPass, dbHost, dbPort, dbName)
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Error al abrir la conexión: %v", err)
 	}
 	defer db.Close()
 
-	// Verificar que la base de datos realmente responda
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Base de datos inaccesible: %v", err)
 	}
-	fmt.Printf("Conexión exitosa a PostgreSQL en %s:%s.\n", dbHost, dbPort)
+	fmt.Printf("🔌 Conexión exitosa a PostgreSQL en %s:%s.\n", dbHost, dbPort)
 
-	// 2. INICIALIZAR LOS ADAPTADORES REALES
+	// Crear el contexto inicial de la aplicación
+	ctx := context.Background()
+
+	// INICIALIZAR EL CONTROLADOR DE TRANSACCIONES Y ADAPTADORES
+	txManager := repository.NewPostgresTxManager(db)
 	accountRepo := repository.NewPostgresAccountRepository(db)
 	transactionRepo := repository.NewPostgresTransactionRepository(db)
 
-	// Simulamos la creación/actualización de las cuentas directamente en las tablas SQL
 	fmt.Println("Sembrando datos iniciales en Postgres...")
-	accountRepo.Save(&domain.Account{ID: "A1", Owner: "Julian", Balance: 1000.0})
-	accountRepo.Save(&domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0.0})
+	accountRepo.Save(ctx, &domain.Account{ID: "A1", Owner: "Julian", Balance: 1000.0})
+	accountRepo.Save(ctx, &domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0.0})
 
-	// 3. INYECCIÓN DE DEPENDENCIAS (El Switch)
-	// El servicio recibe los adaptadores de Postgres sin protestar, porque cumplen el contrato.
-	transferService := application.NewTransferService(accountRepo, transactionRepo)
+	// INYECCIÓN DE DEPENDENCIAS CON EL TX_MANAGER INCLUIDO
+	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager)
 
-	// 4. EJECUTAR TRANSFERENCIA REAL
-	fmt.Println("Procesando transferencia de $300 de Julian a Mercado Libre...")
-	err = transferService.Execute("A1", "A2", 300.0)
+	fmt.Println("Procesando transferencia de $300 de Julian a Mercado Libre con protección ACID...")
+	err = transferService.Execute(ctx, "A1", "A2", 300.0)
 	if err != nil {
 		log.Fatalf("La transferencia falló: %v", err)
 	}
-	fmt.Println("¡Transferencia procesada y guardada con éxito en los discos de Postgres!")
+	fmt.Println("¡Transferencia procesada y blindada con éxito!")
 
-	// 5. CONSULTAR LOS SALDOS FINALES DIRECTO DESDE POSTGRES
-	julianAcc, _ := accountRepo.GetByID("A1")
-	mlAcc, _ := accountRepo.GetByID("A2")
+	// CONSULTAR LOS SALDOS FINALES
+	julianAcc, _ := accountRepo.GetByID(ctx, "A1")
+	mlAcc, _ := accountRepo.GetByID(ctx, "A2")
 
 	fmt.Printf("\n Saldos finales en la Base de Datos:\n")
 	fmt.Printf("- %s: $%.2f\n", julianAcc.Owner, julianAcc.Balance)
