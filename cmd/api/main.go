@@ -48,7 +48,7 @@ func main() {
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Base de datos inaccesible: %v", err)
 	}
-	fmt.Printf("🔌 Conexión exitosa a PostgreSQL en %s:%s.\n", dbHost, dbPort)
+	fmt.Printf("Conexión exitosa a PostgreSQL en %s:%s.\n", dbHost, dbPort)
 
 	// Crear el contexto inicial de la aplicación
 	ctx := context.Background()

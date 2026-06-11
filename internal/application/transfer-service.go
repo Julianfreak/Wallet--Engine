@@ -11,7 +11,7 @@ import (
 type TransferService struct {
 	accountRepo     ports.AccountRepository
 	transactionRepo ports.TransactionRepository
-	txManager       ports.TxManager // <-- Nuevo componente inyectado
+	txManager       ports.TxManager
 }
 
 func NewTransferService(ar ports.AccountRepository, tr ports.TransactionRepository, tm ports.TxManager) *TransferService {
