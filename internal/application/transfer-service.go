@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	"github.com/Julianfreak/Wallet--Engine/internal/ports"
@@ -11,14 +12,16 @@ import (
 type TransferService struct {
 	accountRepo     ports.AccountRepository
 	transactionRepo ports.TransactionRepository
-	txManager       ports.TxManager
+	txManager       ports.
+	logger          ports.Logger
 }
 
-func NewTransferService(ar ports.AccountRepository, tr ports.TransactionRepository, tm ports.TxManager) *TransferService {
+func NewTransferService(ar ports.AccountRepository, tr ports.TransactionRepository, tm ports.TxManager, log ports.Logger) *TransferService {
 	return &TransferService{
 		accountRepo:     ar,
 		transactionRepo: tr,
 		txManager:       tm,
+		logger:          log,
 	}
 }
 
@@ -60,6 +63,9 @@ func (s *TransferService) Execute(ctx context.Context, fromID, toID string, amou
 		if err := s.transactionRepo.Save(txCtx, tx); err != nil {
 			return err
 		}
+
+		msg := fmt.Sprintf("Transferencia exitosa de %s a %s por un monto de $%.2f. (ID Auditoría: %s)", fromID, toID, amount, txID)
+		s.logger.Info(msg)
 
 		return nil // Si llegamos aquí sin errores, el TxManager hace COMMIT automáticamente
 	})
