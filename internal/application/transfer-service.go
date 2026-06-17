@@ -12,7 +12,7 @@ import (
 type TransferService struct {
 	accountRepo     ports.AccountRepository
 	transactionRepo ports.TransactionRepository
-	txManager       ports.
+	txManager       ports.TxManager
 	logger          ports.Logger
 }
 

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Julianfreak/Wallet--Engine/internal/adapters/logger"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
@@ -57,13 +58,14 @@ func main() {
 	txManager := repository.NewPostgresTxManager(db)
 	accountRepo := repository.NewPostgresAccountRepository(db)
 	transactionRepo := repository.NewPostgresTransactionRepository(db)
+	consoleLogger := logger.NewConsoleLogger()
 
 	fmt.Println("Sembrando datos iniciales en Postgres...")
 	accountRepo.Save(ctx, &domain.Account{ID: "A1", Owner: "Julian", Balance: 1000.0})
 	accountRepo.Save(ctx, &domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0.0})
 
 	// INYECCIÓN DE DEPENDENCIAS CON EL TX_MANAGER INCLUIDO
-	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager)
+	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager, consoleLogger)
 
 	fmt.Println("Procesando transferencia de $300 de Julian a Mercado Libre con protección ACID...")
 	err = transferService.Execute(ctx, "A1", "A2", 300.0)

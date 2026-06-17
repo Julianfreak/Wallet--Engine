@@ -43,6 +43,15 @@ func (r *FakeTransactionRepository) Save(ctx context.Context, tx *domain.Transac
 	return nil
 }
 
+// NUEVO DOBLE DE PRUEBA: FakeLogger implementa ports.Logger de forma silenciosa
+type FakeLogger struct {
+	LastMessage string
+}
+
+func (f *FakeLogger) Info(message string) {
+	f.LastMessage = message // Guarda el mensaje en memoria RAM para poder testearlo si es necesario
+}
+
 // --- PRUEBAS DEL CASO DE USO ---
 
 func TestTransferService_Execute_Success(t *testing.T) {
@@ -55,14 +64,13 @@ func TestTransferService_Execute_Success(t *testing.T) {
 	}
 	transactionRepo := &FakeTransactionRepository{}
 	txManager := &FakeTxManager{}
-
-	service := NewTransferService(accountRepo, transactionRepo, txManager)
+	fakeLogger := &FakeLogger{}
+	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger)
 	ctx := context.Background()
 
 	// Ejecución
 	err := service.Execute(ctx, "A1", "A2", 400.0)
 
-	// Verificaciones (Assertions)
 	if err != nil {
 		t.Fatalf("se esperaba una transferencia exitosa, pero falló: %v", err)
 	}
@@ -82,6 +90,10 @@ func TestTransferService_Execute_Success(t *testing.T) {
 	if len(transactionRepo.savedTransactions) != 1 {
 		t.Errorf("se esperaba 1 registro de transacción guardado, se obtuvieron: %d", len(transactionRepo.savedTransactions))
 	}
+
+	if fakeLogger.LastMessage == "" {
+		t.Error("se esperaba que el servicio registrara una auditoría en el logger, pero el mensaje quedó vacío")
+	}
 }
 
 func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
@@ -93,8 +105,8 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 	}
 	transactionRepo := &FakeTransactionRepository{}
 	txManager := &FakeTxManager{}
-
-	service := NewTransferService(accountRepo, transactionRepo, txManager)
+	fakeLogger := &FakeLogger{}
+	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger)
 	ctx := context.Background()
 
 	// Intentar transferir más de lo que se tiene
@@ -108,5 +120,9 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 	fromAcc, _ := accountRepo.GetByID(ctx, "A1")
 	if fromAcc.Balance != 50.0 {
 		t.Errorf("el saldo de origen cambió de forma insegura a: %.2f", fromAcc.Balance)
+	}
+
+	if fakeLogger.LastMessage != "" {
+		t.Errorf("no se esperaba auditoría de éxito en una transferencia fallida, pero se obtuvo: %s", fakeLogger.LastMessage)
 	}
 }
