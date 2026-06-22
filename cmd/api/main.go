@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
+	httpAdapter "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/logger"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
@@ -67,7 +69,21 @@ func main() {
 	// INYECCIÓN DE DEPENDENCIAS CON EL TX_MANAGER INCLUIDO
 	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager, consoleLogger)
 
-	fmt.Println("Procesando transferencia de $300 de Julian a Mercado Libre con protección ACID...")
+	transferHandler := httpAdapter.NewTransferHandler(transferService)
+
+	// Registramos la ruta HTTP y asociamos su función manejadora
+	http.HandleFunc("/transfers", transferHandler.HandleTransfer)
+
+	port := ":8080"
+	fmt.Printf("Servidor bancario escuchando en el puerto %s...\n", port)
+	fmt.Println("Presiona Ctrl+C para apagar el servidor.")
+
+	// Encendemos el servidor. Este método es bloqueante; mantendrá la app viva.
+	if err := http.ListenAndServe(port, nil); err != nil {
+		log.Fatalf("Error al encender el servidor web: %v", err)
+	}
+
+	/* fmt.Println("Procesando transferencia de $300 de Julian a Mercado Libre con protección ACID...")
 	err = transferService.Execute(ctx, "A1", "A2", 300.0)
 	if err != nil {
 		log.Fatalf("La transferencia falló: %v", err)
@@ -80,5 +96,5 @@ func main() {
 
 	fmt.Printf("\n Saldos finales en la Base de Datos:\n")
 	fmt.Printf("- %s: $%.2f\n", julianAcc.Owner, julianAcc.Balance)
-	fmt.Printf("- %s: $%.2f\n", mlAcc.Owner, mlAcc.Balance)
+	fmt.Printf("- %s: $%.2f\n", mlAcc.Owner, mlAcc.Balance) */
 }
