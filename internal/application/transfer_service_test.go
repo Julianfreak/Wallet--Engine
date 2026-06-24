@@ -52,6 +52,15 @@ func (f *FakeLogger) Info(message string) {
 	f.LastMessage = message // Guarda el mensaje en memoria RAM para poder testearlo si es necesario
 }
 
+type FakeNotificationSender struct {
+	Called bool
+}
+
+func (f *FakeNotificationSender) Send(recipient string, message string) error {
+	f.Called = true // Marcamos que el servicio sí intentó enviar una notificación
+	return nil
+}
+
 // --- PRUEBAS DEL CASO DE USO ---
 
 func TestTransferService_Execute_Success(t *testing.T) {
@@ -65,7 +74,8 @@ func TestTransferService_Execute_Success(t *testing.T) {
 	transactionRepo := &FakeTransactionRepository{}
 	txManager := &FakeTxManager{}
 	fakeLogger := &FakeLogger{}
-	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger)
+	fakeNotifier := &FakeNotificationSender{}
+	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger, fakeNotifier)
 	ctx := context.Background()
 
 	// Ejecución
@@ -94,6 +104,10 @@ func TestTransferService_Execute_Success(t *testing.T) {
 	if fakeLogger.LastMessage == "" {
 		t.Error("se esperaba que el servicio registrara una auditoría en el logger, pero el mensaje quedó vacío")
 	}
+
+	if !fakeNotifier.Called {
+		t.Error("se esperaba que el servicio enviara una notificación, pero no lo hizo")
+	}
 }
 
 func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
@@ -106,7 +120,8 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 	transactionRepo := &FakeTransactionRepository{}
 	txManager := &FakeTxManager{}
 	fakeLogger := &FakeLogger{}
-	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger)
+	fakeNotifier := &FakeNotificationSender{}
+	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger, fakeNotifier)
 	ctx := context.Background()
 
 	// Intentar transferir más de lo que se tiene
@@ -124,5 +139,9 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 
 	if fakeLogger.LastMessage != "" {
 		t.Errorf("no se esperaba auditoría de éxito en una transferencia fallida, pero se obtuvo: %s", fakeLogger.LastMessage)
+	}
+
+	if fakeNotifier.Called {
+		t.Error("no se esperaba el envío de una notificación en una transferencia fallida")
 	}
 }
