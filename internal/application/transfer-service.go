@@ -78,6 +78,10 @@ func (s *TransferService) Execute(ctx context.Context, fromID, toID string, amou
 		emailMsg := fmt.Sprintf("¡Hola! Recibiste una transferencia de $%.2f de la cuenta %s.", amount, fromID)
 		_ = s.notifier.Send("usuario_mercado_libre@email.com", emailMsg)
 
+		go func() {
+			_ = s.notifier.Send("usuario_mercado_libre@email.com", emailMsg)
+		}()
+
 		return nil // Si llegamos aquí sin errores, el TxManager hace COMMIT automáticamente
 	})
 }
