@@ -1,8 +1,7 @@
-
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: wallet_postgres
+  wallet-db:
+    image: postgres:15
+    container_name: wallet-postgres-prod
     environment:
       POSTGRES_USER: wallet_user
       POSTGRES_PASSWORD: wallet_password
@@ -10,9 +9,36 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: unless-stopped
+      - pgdata:/var/lib/postgresql/data # Aquí aseguramos la persistencia de datos
+    networks:
+      - wallet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wallet_user -d wallet_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  wallet-api:
+    build: .
+    container_name: wallet-backend
+    ports:
+      - "8082:8082"
+    environment:
+      DB_USER: wallet_user
+      DB_PASSWORD: wallet_password
+      # ¡MAGIA DE REDES! Ya no es 'localhost', es el nombre del servicio de arriba
+      DB_HOST: wallet-db 
+      DB_PORT: 5432
+      DB_NAME: wallet_db
+    depends_on:
+      - wallet-db
+    restart: on-failure
+    networks:
+      - wallet-network
+
+networks:
+  wallet-network:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  pgdata:

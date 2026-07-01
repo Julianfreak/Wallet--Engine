@@ -76,9 +76,10 @@ func (s *TransferService) Execute(ctx context.Context, fromID, toID string, amou
 		s.logger.Info(msg)
 
 		emailMsg := fmt.Sprintf("¡Hola! Recibiste una transferencia de $%.2f de la cuenta %s.", amount, fromID)
-		_ = s.notifier.Send("usuario_mercado_libre@email.com", emailMsg)
 
+		fmt.Println("DEBUG: Preparando envío asíncrono...")
 		go func() {
+			fmt.Println("DEBUG: Ejecutando envío en goroutine...")
 			_ = s.notifier.Send("usuario_mercado_libre@email.com", emailMsg)
 		}()
 
