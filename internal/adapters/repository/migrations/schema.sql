@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS accounts (
+    id VARCHAR(50) PRIMARY KEY,
+    owner VARCHAR(100) NOT NULL,
+    balance NUMERIC(15, 2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id VARCHAR(50) PRIMARY KEY,
+    from_account_id VARCHAR(50) NOT NULL,
+    to_account_id VARCHAR(50) NOT NULL,
+    amount NUMERIC(15, 2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

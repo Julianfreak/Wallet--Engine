@@ -54,6 +54,13 @@ func main() {
 	}
 	fmt.Printf("Conexión exitosa a PostgreSQL en %s:%s.\n", dbHost, dbPort)
 
+	// Migraciones autoimaticas
+	fmt.Println("Ejecutando migraciones automáticas...")
+	if err := repository.RunMigrations(db); err != nil {
+		log.Fatalf("No se pudieron aplicar las migraciones: %v", err)
+	}
+	fmt.Println("Estructura de base de datos verificada/creada.")
+
 	// Crear el contexto inicial de la aplicación
 	ctx := context.Background()
 
