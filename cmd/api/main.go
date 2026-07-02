@@ -16,6 +16,7 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func getEnv(key, fallback string) string {
@@ -81,6 +82,7 @@ func main() {
 	transferHandler := httpAdapter.NewTransferHandler(transferService)
 
 	// Registramos la ruta HTTP y asociamos su función manejadora
+	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/transfers", transferHandler.HandleTransfer)
 
 	port := ":8082"

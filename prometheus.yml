@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 5s # Cada cuanto tiempo Prometheus le pedira metricas a Go
+
+scrape_configs:
+  - job_name: 'wallet-engine-api'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['wallet-api:8082'] # ¡Magia de red! Apunta directamente a tu contenedor de Go

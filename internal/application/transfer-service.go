@@ -3,8 +3,10 @@ package application
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
+	"github.com/Julianfreak/Wallet--Engine/internal/infrastructure/metrics"
 	"github.com/Julianfreak/Wallet--Engine/internal/ports"
 	"github.com/google/uuid"
 )
@@ -34,12 +36,17 @@ func NewTransferService(
 }
 
 func (s *TransferService) Execute(ctx context.Context, fromID, toID string, amount float64) error {
+	startTime := time.Now()
+	// Al final de la funcion, calculamos la duracion y la registramos en el histograma
+	defer func() {
+		metrics.TransferDuration.Observe(time.Since(startTime).Seconds())
+	}()
 	// Envolvemos todo el proceso en una transacción atómica externa
 	return s.txManager.WithTransaction(ctx, func(txCtx context.Context) error {
-
 		// 1. Buscar cuentas usando el contexto transaccional (txCtx)
 		fromAccount, err := s.accountRepo.GetByID(txCtx, fromID)
 		if err != nil {
+			metrics.TransfersTotal.WithLabelValues("error").Inc()
 			return err
 		}
 
