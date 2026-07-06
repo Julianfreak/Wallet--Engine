@@ -2,16 +2,20 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
+	"github.com/go-playground/validator/v10"
 )
+
+var validate = validator.New()
 
 // TransferRequest define la estructura del JSON que esperamos recibir del cliente
 type TransferRequest struct {
-	FromAccountID string  `json:"from_account_id"`
-	ToAccountID   string  `json:"to_account_id"`
-	Amount        float64 `json:"amount"`
+	FromAccountID string  `json:"from_account_id" validate:"required"`
+	ToAccountID   string  `json:"to_account_id" validate:"required,nefield=FromAccountID"`
+	Amount        float64 `json:"amount" validate:"required,gt=0"`
 }
 
 // TransferResponse define la estructura de la respuesta en caso de éxito
@@ -45,6 +49,15 @@ func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request)
 	var req TransferRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.respondWithError(w, http.StatusBadRequest, "formato JSON inválido")
+		return
+	}
+
+	if err := validate.Struct(req); err != nil {
+		// Si rompe las reglas, devolvemos un HTTP 400 (Bad Request) y abortamos.
+		// El código NO llega a tocar la lógica de negocio ni la base de datos.
+		errMsg := fmt.Sprintf("Datos inválidos: %v", err)
+		// Usamos tu método personalizado para mantener la consistencia
+		h.respondWithError(w, http.StatusBadRequest, errMsg)
 		return
 	}
 
