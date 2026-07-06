@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 )
@@ -54,10 +55,12 @@ func (f *FakeLogger) Info(message string) {
 
 type FakeNotificationSender struct {
 	Called bool
+	Done   chan bool
 }
 
 func (f *FakeNotificationSender) Send(recipient string, message string) error {
 	f.Called = true // Marcamos que el servicio sí intentó enviar una notificación
+	f.Done <- true
 	return nil
 }
 
@@ -74,12 +77,18 @@ func TestTransferService_Execute_Success(t *testing.T) {
 	transactionRepo := &FakeTransactionRepository{}
 	txManager := &FakeTxManager{}
 	fakeLogger := &FakeLogger{}
-	fakeNotifier := &FakeNotificationSender{}
+	fakeNotifier := &FakeNotificationSender{Done: make(chan bool, 1)}
 	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger, fakeNotifier)
 	ctx := context.Background()
 
 	// Ejecución
 	err := service.Execute(ctx, "A1", "A2", 400.0)
+	select {
+	case <-fakeNotifier.Done:
+		// Todo bien, se llamó al Send
+	case <-time.After(1 * time.Second):
+		t.Error("Timeout: la notificación nunca llegó")
+	}
 
 	if err != nil {
 		t.Fatalf("se esperaba una transferencia exitosa, pero falló: %v", err)
@@ -120,7 +129,7 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 	transactionRepo := &FakeTransactionRepository{}
 	txManager := &FakeTxManager{}
 	fakeLogger := &FakeLogger{}
-	fakeNotifier := &FakeNotificationSender{}
+	fakeNotifier := &FakeNotificationSender{Done: make(chan bool, 1)}
 	service := NewTransferService(accountRepo, transactionRepo, txManager, fakeLogger, fakeNotifier)
 	ctx := context.Background()
 
@@ -129,6 +138,14 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 
 	if err == nil {
 		t.Error("se esperaba un fallo por fondos insuficientes, pero el servicio retornó éxito")
+	}
+
+	err = service.Execute(ctx, "A1", "A3", 100.0)
+	time.Sleep(10 * time.Millisecond)
+
+	// 3. Assert: Verificamos el comportamiento esperado
+	if err == nil {
+		t.Error("se esperaba un fallo por cuenta inexistente, pero retornó éxito")
 	}
 
 	// Verificar que los saldos se mantuvieron intactos (no hubo cambios accidentales)
