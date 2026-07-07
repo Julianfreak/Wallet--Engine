@@ -7,19 +7,20 @@ import (
 	"time"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
+	"github.com/Julianfreak/Wallet--Engine/internal/testutils"
 )
 
-// --- DOBLES DE PRUEBA (FAKES) ---
+var fakeLogger = &testutils.FakeLogger{}
 
-type FakeTxManager struct{}
+/* type FakeTxManager struct{} */
 
 func (f *FakeTxManager) WithTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	return fn(ctx) // El simulador ejecuta la función inmediatamente sin abrir SQL real
 }
 
-type FakeAccountRepository struct {
+/* type FakeAccountRepository struct {
 	accounts map[string]*domain.Account
-}
+} */
 
 func (r *FakeAccountRepository) GetByID(ctx context.Context, id string) (*domain.Account, error) {
 	acc, exists := r.accounts[id]
@@ -35,9 +36,9 @@ func (r *FakeAccountRepository) Save(ctx context.Context, acc *domain.Account) e
 	return nil
 }
 
-type FakeTransactionRepository struct {
+/* type FakeTransactionRepository struct {
 	savedTransactions []*domain.Transaction
-}
+} */
 
 func (r *FakeTransactionRepository) Save(ctx context.Context, tx *domain.Transaction) error {
 	r.savedTransactions = append(r.savedTransactions, tx)
@@ -45,18 +46,18 @@ func (r *FakeTransactionRepository) Save(ctx context.Context, tx *domain.Transac
 }
 
 // NUEVO DOBLE DE PRUEBA: FakeLogger implementa ports.Logger de forma silenciosa
-type FakeLogger struct {
+/* type FakeLogger struct {
 	LastMessage string
-}
+} */
 
 func (f *FakeLogger) Info(message string) {
 	f.LastMessage = message // Guarda el mensaje en memoria RAM para poder testearlo si es necesario
 }
 
-type FakeNotificationSender struct {
+/* type FakeNotificationSender struct {
 	Called bool
 	Done   chan bool
-}
+} */
 
 func (f *FakeNotificationSender) Send(recipient string, message string) error {
 	f.Called = true // Marcamos que el servicio sí intentó enviar una notificación
