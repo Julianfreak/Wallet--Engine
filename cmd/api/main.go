@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Julianfreak/Wallet--Engine/internal/adapters/api"
 	httpAdapter "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/logger"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/notification"
@@ -59,6 +60,7 @@ func main() {
 	ctx := context.Background()
 	txManager := repository.NewPostgresTxManager(db)
 	accountRepo := repository.NewPostgresAccountRepository(db)
+	accountHandler := api.NewAccountHandler(accountRepo)
 	transactionRepo := repository.NewPostgresTransactionRepository(db)
 	consoleLogger := logger.NewConsoleLogger()
 	emailSender := notification.NewEmailSender()
@@ -74,6 +76,7 @@ func main() {
 	// Rutas
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/transfers", transferHandler.HandleTransfer)
+	http.HandleFunc("/accounts", accountHandler.GetAccount)
 
 	fmt.Printf("Servidor bancario escuchando en %s...\n", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, nil); err != nil {
