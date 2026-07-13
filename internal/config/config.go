@@ -3,7 +3,6 @@ package config
 import (
 	"log"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -16,25 +15,50 @@ type Config struct {
 
 // LoadConfig carga la configuración desde un archivo .env o variables de entorno
 func LoadConfig(path string) (config Config, err error) {
-	// 1. Intentamos cargar el archivo .env (útil en desarrollo local)
-	// Si no existe, no pasa nada, viper buscará en el entorno del sistema
-	if err := godotenv.Load(path + "/.env"); err != nil {
-		log.Println("No se encontró archivo .env, usando variables de entorno del sistema")
+	viper.SetConfigFile(path + "/.env") // Asegura que leemos el archivo correcto
+	viper.SetConfigType("env")          // Especifica el tipo
+	viper.AutomaticEnv()                // Lee variables de sistema si el archivo falla
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Printf("Aviso: No se pudo leer el archivo: %v", err)
 	}
 
-	// 2. Configuración de Viper
+	// DEBUG: Ver qué llaves encontró
+	log.Printf("DEBUG: Llaves encontradas por Viper: %v", viper.AllKeys())
+
+	err = viper.Unmarshal(&config)
+	log.Printf("DEBUG: Estructura Config mapeada: %+v", config)
+
+	return
+}
+
+/* func LoadConfig(path string) (config Config, err error) {
+	// 1. Cargamos el .env explícitamente
+	godotenv.Load(path + "/.env")
+
 	viper.AddConfigPath(path)
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
+	viper.AutomaticEnv()
 
-	viper.AutomaticEnv() // Sobreescribe los valores del archivo con las variables del sistema si existen
-
-	// Intentamos leer el archivo si existe
+	// Intentamos leer
 	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("Aviso: No se pudo leer archivo de configuración: %v", err)
+		log.Printf("Aviso: Viper no pudo leer el archivo: %v", err)
 	}
 
-	// 3. Mapeamos los valores al struct
+	// DEBUG: Ver dónde está buscando Viper
+	log.Printf("DEBUG: Archivo usado por Viper: %s", viper.ConfigFileUsed())
+
+	// 2. Mapeamos
 	err = viper.Unmarshal(&config)
+
+	// DEBUG: Imprimir qué cargó
+	log.Printf("DEBUG: Config cargada: %+v", config)
+
+	// 3. Validación crítica
+	if config.DBSource == "" {
+		log.Fatal("ERROR CRÍTICO: La variable DB_SOURCE está vacía. Verifica tu .env")
+	}
+
 	return
-}
+} */
