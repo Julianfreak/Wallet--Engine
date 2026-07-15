@@ -79,6 +79,9 @@ func main() {
 	http.HandleFunc("/accounts", accountHandler.GetAccount)
 
 	fmt.Printf("Servidor bancario escuchando en %s...\n", cfg.ServerAddress)
+	// En cmd/api/main.go
+	log.Println("Servidor de Wallet-Engine iniciado con éxito en http://localhost:8082 ")
+	http.ListenAndServe(":8082", nil)
 	if err := http.ListenAndServe(cfg.ServerAddress, nil); err != nil {
 		log.Fatalf("Error al encender el servidor web: %v", err)
 	}
