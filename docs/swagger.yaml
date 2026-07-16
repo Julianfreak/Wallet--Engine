@@ -1,0 +1,31 @@
+basePath: /
+host: localhost:8082
+info:
+  contact: {}
+  description: Motor de billetera digital con transacciones atómicas.
+  title: Wallet-Engine API
+  version: "1.0"
+paths:
+  /accounts:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve los detalles y saldo actual de una cuenta mediante su
+        ID
+      parameters:
+      - description: ID de la cuenta
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Respuesta exitosa
+          schema:
+            type: string
+      summary: Obtiene una cuenta
+      tags:
+      - accounts
+swagger: "2.0"

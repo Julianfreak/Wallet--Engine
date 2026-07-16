@@ -19,7 +19,7 @@ El proyecto sigue principios de diseño modular para garantizar que la lógica d
 *   `internal/domain/`: (Próximamente) Entidades y reglas de negocio.
 *   `internal/repository/`: Interacción directa con la base de datos PostgreSQL.
 
-## ⚙️ Requisitos Previos
+##  Requisitos Previos
 
 Asegúrate de tener instalado en tu sistema local:
 *   [Go](https://golang.org/doc/install) (v1.20 o superior)
@@ -30,5 +30,5 @@ Asegúrate de tener instalado en tu sistema local:
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone [https://github.com/TU_USUARIO/Wallet--Engine.git](https://github.com/TU_USUARIO/Wallet--Engine.git)
+   git clone [https://github.com/Julianfreak/Wallet--Engine.git](https://github.com/Julianfreak/Wallet--Engine.git)
    cd Wallet--Engine

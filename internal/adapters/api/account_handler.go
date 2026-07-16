@@ -15,6 +15,14 @@ func NewAccountHandler(repo *repository.PostgresAccountRepository) *AccountHandl
 	return &AccountHandler{repo: repo}
 }
 
+// @Summary Obtiene una cuenta
+// @Description Devuelve los detalles y saldo actual de una cuenta mediante su ID
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param id query string true "ID de la cuenta"
+// @Success 200 {string} string "Respuesta exitosa"
+// @Router /accounts [get]
 func (h *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)

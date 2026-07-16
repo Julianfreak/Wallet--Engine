@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
+	_ "github.com/Julianfreak/Wallet--Engine/docs"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/api"
 	httpAdapter "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/logger"
@@ -18,15 +18,14 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return fallback
-}
-
+// @title Wallet-Engine API
+// @version 1.0
+// @description Motor de billetera digital con transacciones atómicas.
+// @host localhost:8082
+// @BasePath /
 func main() {
 	fmt.Println("--- Iniciando Billetera Digital con PostgreSQL ---")
 
@@ -78,10 +77,12 @@ func main() {
 	http.HandleFunc("/transfers", transferHandler.HandleTransfer)
 	http.HandleFunc("/accounts", accountHandler.GetAccount)
 
+	// NUEVA RUTA: La página web de Swagger
+	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+
 	fmt.Printf("Servidor bancario escuchando en %s...\n", cfg.ServerAddress)
 	// En cmd/api/main.go
-	log.Println("Servidor de Wallet-Engine iniciado con éxito en http://localhost:8082 ")
-	http.ListenAndServe(":8082", nil)
+	log.Printf("Servidor de Wallet-Engine iniciado con éxito en http://%s \n", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, nil); err != nil {
 		log.Fatalf("Error al encender el servidor web: %v", err)
 	}
