@@ -78,7 +78,9 @@ func main() {
 	http.HandleFunc("/accounts", accountHandler.GetAccount)
 
 	// NUEVA RUTA: La página web de Swagger
-	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+	http.HandleFunc("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8082/swagger/doc.json"),
+	))
 
 	fmt.Printf("Servidor bancario escuchando en %s...\n", cfg.ServerAddress)
 	// En cmd/api/main.go
