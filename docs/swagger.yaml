@@ -28,4 +28,35 @@ paths:
       summary: Obtiene una cuenta
       tags:
       - accounts
+  /transfers:
+    post:
+      consumes:
+      - application/json
+      description: Transfiere fondos de una cuenta origen a una cuenta destino garantizando
+        la atomicidad de la operación en base de datos.
+      parameters:
+      - description: JSON con origin_id, destination_id y amount
+        in: body
+        name: request
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Transferencia exitosa
+          schema:
+            type: string
+        "400":
+          description: Datos inválidos o fondos insuficientes
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      summary: Realiza una transferencia
+      tags:
+      - transfers
 swagger: "2.0"

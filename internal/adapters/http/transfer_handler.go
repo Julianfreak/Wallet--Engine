@@ -38,6 +38,16 @@ func NewTransferHandler(service *application.TransferService) *TransferHandler {
 }
 
 // HandleTransfer procesa la petición POST /transfers
+// @Summary Realiza una transferencia
+// @Description Transfiere fondos de una cuenta origen a una cuenta destino garantizando la atomicidad de la operación en base de datos.
+// @Tags transfers
+// @Accept json
+// @Produce json
+// @Param request body string true "JSON con origin_id, destination_id y amount"
+// @Success 200 {string} string "Transferencia exitosa"
+// @Failure 400 {string} string "Datos inválidos o fondos insuficientes"
+// @Failure 500 {string} string "Error interno del servidor"
+// @Router /transfers [post]
 func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request) {
 	// 1. Validar que estrictamente sea un método POST
 	if r.Method != http.MethodPost {

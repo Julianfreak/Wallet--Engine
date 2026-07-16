@@ -21,12 +21,13 @@ services:
   wallet-api:
     build: .
     container_name: wallet-backend
+    profiles:
+      - prod # <--- Este contenedor solo inicia en el perfil "prod"
     ports:
       - "8082:8082"
     environment:
       DB_USER: wallet_user
       DB_PASSWORD: wallet_password
-      # ¡MAGIA DE REDES! Ya no es 'localhost', es el nombre del servicio de arriba
       DB_HOST: wallet-db 
       DB_PORT: 5432
       DB_NAME: wallet_db
