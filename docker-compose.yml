@@ -22,7 +22,7 @@ services:
     build: .
     container_name: wallet-backend
     profiles:
-      - prod # <--- Este contenedor solo inicia en el perfil "prod"
+      - prod # <--- Este contenedor solo inicia en el perfil "prod" docker compose --profile prod up -d --build
     ports:
       - "8082:8082"
     environment:
