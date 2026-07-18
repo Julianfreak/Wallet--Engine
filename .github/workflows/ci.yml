@@ -1,0 +1,31 @@
+name: Billetera Digital CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Ejecutar Pruebas
+    runs-on: ubuntu-latest # El servidor virtual que nos presta GitHub
+
+    steps:
+      - name: Clonar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache: true # Acelera las ejecuciones futuras guardando las dependencias
+
+      - name: Descargar dependencias
+        run: go mod download
+
+      - name: Ejecutar pruebas unitarias
+        # El comando -v nos da los detalles y ./... busca tests en todas las carpetas
+        run: go test -v ./...
