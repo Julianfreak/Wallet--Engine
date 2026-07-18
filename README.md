@@ -32,3 +32,15 @@ Asegúrate de tener instalado en tu sistema local:
    ```bash
    git clone [https://github.com/Julianfreak/Wallet--Engine.git](https://github.com/Julianfreak/Wallet--Engine.git)
    cd Wallet--Engine
+
+## Testing e Integración Continua (CI)
+
+Este proyecto prioriza la fiabilidad mediante pruebas unitarias exhaustivas en la capa de adaptadores (Handlers) y lógica de negocio (Servicios), utilizando Mocks para aislar el comportamiento de la base de datos.
+
+### Ejecución Local
+Para ejecutar la suite de pruebas completa en tu entorno local con salida detallada:
+
+```bash
+go test -v ./...
+
+[![Billetera Digital CI](https://github.com/Julianfreak/Wallet--Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Julianfreak/Wallet--Engine/actions/workflows/ci.yml)
