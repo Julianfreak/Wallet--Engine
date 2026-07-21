@@ -37,6 +37,9 @@ Asegúrate de tener instalado en tu sistema local:
 
 Este proyecto prioriza la fiabilidad mediante pruebas unitarias exhaustivas en la capa de adaptadores (Handlers) y lógica de negocio (Servicios), utilizando Mocks para aislar el comportamiento de la base de datos.
 
+### Cobertura de Código (Code Coverage)
+El proyecto utiliza pruebas basadas en tablas (Table-Driven Tests) y dobles de prueba (Fakes) para simular la infraestructura. Actualmente, la cobertura en la capa de adaptadores HTTP y la lógica de negocio supera el 75%.
+
 ### Ejecución Local
 Para ejecutar la suite de pruebas completa en tu entorno local con salida detallada:
 
