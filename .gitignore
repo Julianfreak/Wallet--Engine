@@ -1,2 +1,9 @@
 .env
 /tmp
+# Tests y Cobertura
+coverage.out
+coverage.html
+#go tool cover -html=coverage.out
+#go test -coverprofile=coverage.out ./...
+#docker compose up -d
+#air
