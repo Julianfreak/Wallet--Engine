@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
@@ -37,18 +38,21 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 		metodo         string
 		cuerpoRequest  string
 		codigoEsperado int
+		textoEsperado  string
 	}{
 		{
 			nombre:         "Rechazar monto negativo",
 			metodo:         http.MethodPost,
 			cuerpoRequest:  `{"from_account_id": "A1", "to_account_id": "A2", "amount": -10.0}`,
 			codigoEsperado: http.StatusBadRequest,
+			textoEsperado:  "failed on the 'gt' tag",
 		},
 		{
 			nombre:         "Rechazar autotransferencia",
 			metodo:         http.MethodPost,
 			cuerpoRequest:  `{"from_account_id": "A1", "to_account_id": "A1", "amount": 50.0}`,
 			codigoEsperado: http.StatusBadRequest,
+			textoEsperado:  "failed on the 'nefield' tag",
 		},
 		{
 			nombre:         "Falla por método incorrecto (GET)",
@@ -73,6 +77,7 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 			metodo:         http.MethodPost,
 			cuerpoRequest:  `{"from_account_id": "cuenta_pobre", "to_account_id": "A2", "amount": 5000.0}`,
 			codigoEsperado: http.StatusBadRequest,
+			textoEsperado:  "fondos insuficientes",
 		},
 	}
 
@@ -87,6 +92,11 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 
 			if rec.Code != caso.codigoEsperado {
 				t.Errorf("Se esperaba %d, se obtuvo: %d en el caso '%s'", caso.codigoEsperado, rec.Code, caso.nombre)
+			}
+
+			respuestaDelServidor := rec.Body.String()
+			if !strings.Contains(respuestaDelServidor, caso.textoEsperado) {
+				t.Errorf("Se esperaba que la respuesta contuviera '%s', pero respondió: %s", caso.textoEsperado, respuestaDelServidor)
 			}
 		})
 	}

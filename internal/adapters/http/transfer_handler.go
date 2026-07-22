@@ -71,16 +71,6 @@ func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 3. Validación básica de entrada (Defensa básica)
-	if req.FromAccountID == "" || req.ToAccountID == "" {
-		h.respondWithError(w, http.StatusBadRequest, "los campos 'from_account_id' y 'to_account_id' son obligatorios")
-		return
-	}
-	if req.Amount <= 0 {
-		h.respondWithError(w, http.StatusBadRequest, "el monto a transferir debe ser mayor a cero")
-		return
-	}
-
 	// 4. Invocar el núcleo de tu negocio (El caso de uso)
 	ctx := r.Context()
 	err := h.service.Execute(ctx, req.FromAccountID, req.ToAccountID, req.Amount)
