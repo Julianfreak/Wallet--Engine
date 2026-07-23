@@ -73,7 +73,13 @@ func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request)
 
 	// 4. Invocar el núcleo de tu negocio (El caso de uso)
 	ctx := r.Context()
-	err := h.service.Execute(ctx, req.FromAccountID, req.ToAccountID, req.Amount)
+	cmd := application.TransferCommand{
+		FromAccountID: req.FromAccountID, // o el nombre de tu variable en el handler
+		ToAccountID:   req.ToAccountID,
+		Amount:        req.Amount,
+	}
+
+	err := h.service.Execute(ctx, cmd)
 	if err != nil {
 		// Si el servicio falla (por ejemplo, fondos insuficientes), respondemos con un 400 o 500 según corresponda
 		h.respondWithError(w, http.StatusBadRequest, err.Error())

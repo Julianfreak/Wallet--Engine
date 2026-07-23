@@ -7,6 +7,7 @@ import (
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	"github.com/Julianfreak/Wallet--Engine/internal/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 // --- PRUEBAS DEL CASO DE USO ---
@@ -29,7 +30,14 @@ func TestTransferService_Execute_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// Ejecución
-	err := service.Execute(ctx, "A1", "A2", 400.0)
+	cmd := TransferCommand{
+		FromAccountID: "A1",
+		ToAccountID:   "A2",
+		Amount:        400.0,
+	}
+
+	err := service.Execute(ctx, cmd)
+	assert.NoError(t, err)
 
 	// Sincronización de la goroutine
 	select {
@@ -85,14 +93,20 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 	ctx := context.Background()
 
 	// Intentar transferir más de lo que se tiene
-	err := service.Execute(ctx, "A1", "A2", 200.0)
+	cmd := TransferCommand{
+		FromAccountID: "A1",
+		ToAccountID:   "A2",
+		Amount:        100.00,
+	}
+
+	err := service.Execute(ctx, cmd)
 
 	if err == nil {
 		t.Error("se esperaba un fallo por fondos insuficientes, pero el servicio retornó éxito")
 	}
 
 	// Intento de transferencia a cuenta inexistente para agotar los escenarios analizados
-	err = service.Execute(ctx, "A1", "A3", 100.0)
+	err = service.Execute(ctx, cmd)
 
 	if err == nil {
 		t.Error("se esperaba un fallo por cuenta inexistente, pero retornó éxito")
