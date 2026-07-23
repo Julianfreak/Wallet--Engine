@@ -47,3 +47,11 @@ Para ejecutar la suite de pruebas completa en tu entorno local con salida detall
 go test -v ./...
 
 [![Billetera Digital CI](https://github.com/Julianfreak/Wallet--Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Julianfreak/Wallet--Engine/actions/workflows/ci.yml)
+
+### Ejecución de Pruebas
+
+Para ejecutar las pruebas unitarias e de integración (que requieren el contenedor de base de datos activo):
+
+1. Levanta el servicio de base de datos con Docker Compose:
+   ```bash
+   docker-compose up -d wallet-db
