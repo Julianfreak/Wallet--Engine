@@ -16,9 +16,9 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: secretpassword
-          POSTGRES_NAME: wallet_test
+          POSTGRES_USER: wallet_user
+          POSTGRES_PASSWORD: wallet_password
+          POSTGRES_DB: wallet_db
         ports:
           - 5432:5432
         # Health check para asegurar que Postgres está listo antes de correr las pruebas
