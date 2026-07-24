@@ -3,12 +3,28 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	_ "github.com/lib/pq" // Driver de Postgres
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	dsn := "postgres://wallet_user:wallet_password@localhost:5432/wallet_db?sslmode=disable"
+
+	// Ejecutamos las migraciones para asegurar que la tabla 'accounts' y otras existan
+	if err := RunMigrations(dsn); err != nil {
+		log.Fatalf("No se pudieron aplicar las migraciones para las pruebas: %v", err)
+	}
+
+	log.Println("Migraciones aplicadas correctamente para los tests de repositorio.")
+
+	// Continuamos con la ejecución normal de los tests
+	os.Exit(m.Run())
+}
 
 // setupTestDB prepara la conexión a Docker y limpia la base de datos
 func setupTestDB(t *testing.T) *sql.DB {
