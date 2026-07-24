@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
+	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/lib/pq" // Driver de Postgres
 	"github.com/stretchr/testify/assert"
 )
@@ -16,8 +17,14 @@ func TestMain(m *testing.M) {
 	dsn := "postgres://wallet_user:wallet_password@localhost:5432/wallet_db?sslmode=disable"
 
 	// Ejecutamos las migraciones para asegurar que la tabla 'accounts' y otras existan
-	if err := RunMigrations(dsn); err != nil {
-		log.Fatalf("No se pudieron aplicar las migraciones para las pruebas: %v", err)
+	migrationPath := "file://../../../migrations"
+	mInstance, err := migrate.New(migrationPath, dsn)
+	if err != nil {
+		log.Fatalf("Error creando instancia de migración: %v", err)
+	}
+
+	if err := mInstance.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Fallo al aplicar migraciones: %v", err)
 	}
 
 	log.Println("Migraciones aplicadas correctamente para los tests de repositorio.")
