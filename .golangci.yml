@@ -5,7 +5,6 @@ run:
   tests: true
 
 linters:
-  disable-all: false
   enable:
     - errcheck     # Revisa que no se ignoren los errores devueltos por las funciones
     - govet        # Revisa construcciones sospechosas (ej. formato de printf incorrecto)
