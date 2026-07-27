@@ -43,7 +43,6 @@ El proyecto utiliza pruebas basadas en tablas (Table-Driven Tests) y dobles de p
 ### Ejecución Local
 Para ejecutar la suite de pruebas completa en tu entorno local con salida detallada:
 
-```bash
 go test -v ./...
 
 [![Billetera Digital CI](https://github.com/Julianfreak/Wallet--Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Julianfreak/Wallet--Engine/actions/workflows/ci.yml)
@@ -55,3 +54,11 @@ Para ejecutar las pruebas unitarias e de integración (que requieren el contened
 1. Levanta el servicio de base de datos con Docker Compose:
    ```bash
    docker-compose up -d wallet-db
+
+##  Calidad de Código y Análisis Estático
+
+El proyecto utiliza `golangci-lint` para asegurar las buenas prácticas y evitar errores comunes. 
+
+Para ejecutar el análisis estático localmente mediante Docker:
+```bash
+docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:latest golangci-lint run   

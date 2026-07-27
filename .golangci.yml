@@ -1,0 +1,18 @@
+version: 2
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  disable-all: false
+  enable:
+    - errcheck     # Revisa que no se ignoren los errores devueltos por las funciones
+    - govet        # Revisa construcciones sospechosas (ej. formato de printf incorrecto)
+    - ineffassign  # Detecta asignaciones a variables que nunca se vuelven a usar
+    - staticcheck  # Detección avanzada de bugs estáticos
+    - unused       # Detecta código, funciones o estructuras muertas (no usadas)
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
