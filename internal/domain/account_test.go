@@ -28,7 +28,7 @@ func TestAccount_Withdraw(t *testing.T) {
 
 func TestAccount_Deposit(t *testing.T) {
 	acc := &Account{ID: "A2", Owner: "Mercado Libre", Balance: 100.0}
-	acc.Deposit(150.0)
+	_ = acc.Deposit(150.0)
 
 	if acc.Balance != 250.0 {
 		t.Errorf("saldo esperado tras depósito: 250.0, obtenido: %.2f", acc.Balance)

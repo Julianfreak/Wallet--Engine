@@ -48,7 +48,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error al abrir la conexión: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Base de datos inaccesible: %v", err)
@@ -66,8 +68,8 @@ func main() {
 
 	// Sembrado de datos iniciales (Solo para pruebas iniciales)
 	// Nota: Esto podría fallar si la cuenta ya existe, considera validarlo
-	accountRepo.Save(ctx, &domain.Account{ID: "A1", Owner: "Julian", Balance: 1000})
-	accountRepo.Save(ctx, &domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0})
+	_ = accountRepo.Save(ctx, &domain.Account{ID: "A1", Owner: "Julian", Balance: 1000})
+	_ = accountRepo.Save(ctx, &domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0})
 
 	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager, consoleLogger, emailSender)
 	transferHandler := httpAdapter.NewTransferHandler(transferService)

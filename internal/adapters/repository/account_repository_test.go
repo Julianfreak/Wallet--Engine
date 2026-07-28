@@ -54,7 +54,9 @@ func setupTestDB(t *testing.T) *sql.DB {
 func TestPostgresAccountRepository_SaveAndGet(t *testing.T) {
 	// 1. Arrange: Conectamos a la BD y creamos tu repositorio real
 	db := setupTestDB(t)
-	defer db.Close() // Se asegura de soltar la conexión al terminar
+	defer func() {
+		_ = db.Close()
+	}() // Se asegura de soltar la conexión al terminar
 
 	repo := NewPostgresAccountRepository(db)
 	ctx := context.Background()
