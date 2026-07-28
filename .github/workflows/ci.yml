@@ -26,6 +26,23 @@ jobs:
         with:
           version: latest
           working-directory: .
+  security:
+    name: Auditoría de Seguridad (Govulncheck)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+
+      - name: Ejecutar govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+          
   test:
     name: Ejecutar Pruebas
     needs: lint

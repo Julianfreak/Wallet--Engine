@@ -57,8 +57,18 @@ Para ejecutar las pruebas unitarias e de integración (que requieren el contened
 
 ##  Calidad de Código y Análisis Estático
 
-El proyecto utiliza `golangci-lint` para asegurar las buenas prácticas y evitar errores comunes. 
+   El proyecto utiliza `golangci-lint` para asegurar las buenas prácticas y evitar errores comunes. 
 
-Para ejecutar el análisis estático localmente mediante Docker:
-```bash
-docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:latest golangci-lint run   
+   Para ejecutar el análisis estático localmente mediante Docker:
+
+   docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:latest golangci-lint run   
+
+##  Auditoría de Seguridad
+
+El proyecto utiliza `govulncheck` (la herramienta oficial de Go) para escanear vulnerabilidades conocidas tanto en el código fuente como en las dependencias de terceros.
+
+   Para ejecutar la auditoría de seguridad localmente:
+
+   ```bash
+   go install golang.org/x/vuln/cmd/govulncheck@latest
+   govulncheck ./...
