@@ -89,7 +89,7 @@ func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request)
 	// 5. Responder con éxito si todo salió perfecto
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(TransferResponse{
+	_ = json.NewEncoder(w).Encode(TransferResponse{
 		Message: "Transferencia procesada de forma atómica y auditable con éxito",
 	})
 }
@@ -98,5 +98,5 @@ func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request)
 func (h *TransferHandler) respondWithError(w http.ResponseWriter, code int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(ErrorResponse{Error: message})
+	_ = json.NewEncoder(w).Encode(ErrorResponse{Error: message})
 }
