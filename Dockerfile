@@ -28,6 +28,8 @@ WORKDIR /root/
 
 # Copiamos SOLO el binario terminado desde la etapa 'builder'
 COPY --from=builder /app/wallet-api .
+COPY --from=builder /app/.env .
+COPY --from=builder /app/migrations ./migrations
 
 # Exponemos el puerto de la aplicación
 EXPOSE 8082
