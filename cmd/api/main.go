@@ -6,6 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "github.com/Julianfreak/Wallet--Engine/docs"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/api"
@@ -56,11 +59,6 @@ func main() {
 		slog.Error("error al abrir la conexión", "error", err)
 		os.Exit(1)
 	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			slog.Error("error al cerrar la conexión a la base de datos", "error", err)
-		}
-	}()
 
 	if err := db.Ping(); err != nil {
 		slog.Error("error al pingear la base de datos", "error", err)
@@ -78,7 +76,6 @@ func main() {
 	emailSender := notification.NewEmailSender()
 
 	// Sembrado de datos iniciales (Solo para pruebas iniciales)
-	// Nota: Esto podría fallar si la cuenta ya existe, considera validarlo
 	_ = accountRepo.Save(ctx, &domain.Account{ID: "A1", Owner: "Julian", Balance: 1000})
 	_ = accountRepo.Save(ctx, &domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0})
 
@@ -95,11 +92,45 @@ func main() {
 		httpSwagger.URL("http://localhost:8082/swagger/doc.json"),
 	))
 
-	slog.Info("Servidor bancario escuchando", "address", cfg.ServerAddress)
-	// En cmd/api/main.go
-	slog.Info("Servidor de Wallet-Engine iniciado con éxito", "url", "http://"+cfg.ServerAddress)
-	if err := http.ListenAndServe(cfg.ServerAddress, nil); err != nil {
-		slog.Error("error al encender el servidor web", "error", err)
-		os.Exit(1)
+	server := &http.Server{
+		Addr:    cfg.ServerAddress,
+		Handler: nil, // Utiliza el DefaultServeMux donde registraste los endpoints
 	}
+
+	// Canal para capturar señales del sistema operativo (Ctrl+C o Docker stop)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	// Arrancamos el servidor en una Goroutine paralela para que no bloquee el hilo principal
+	go func() {
+		slog.Info("servidor de Wallet-Engine iniciado con éxito", "address", cfg.ServerAddress)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("error crítico en el servidor web", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	// El hilo principal se detiene aquí hasta recibir una señal de apagado
+	sig := <-sigChan
+	slog.Info("señal de apagado recibida, iniciando Graceful Shutdown...", "signal", sig.String())
+
+	// Creamos un contexto con los 7 segundos de gracia solicitados
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel()
+
+	// 1. Apagamos el servidor HTTP de forma ordenada (espera peticiones en vuelo)
+	if err := server.Shutdown(ctxShutdown); err != nil {
+		slog.Error("el servidor se detuvo de forma forzosa por timeout o error", "error", err)
+	} else {
+		slog.Info("servidor HTTP detenido ordenadamente")
+	}
+
+	// 2. Cerramos limpiamente la conexión a la base de datos
+	if err := db.Close(); err != nil {
+		slog.Error("error al cerrar la conexión a la base de datos", "error", err)
+	} else {
+		slog.Info("conexión a la base de datos cerrada correctamente")
+	}
+
+	slog.Info("aplicación finalizada de forma limpia")
 }
