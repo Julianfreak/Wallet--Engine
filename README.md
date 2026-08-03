@@ -80,3 +80,31 @@ Wallet-Engine implementa **Logging Estructurado en formato JSON** utilizando el 
 
 *   **Formato JSON:** Todos los eventos del sistema se emiten estructurados con pares clave-valor, facilitando su indexación y auditoría en plataformas de análisis de registros (como ELK, Datadog o Grafana Loki).
 *   **Niveles de Severidad:** Manejo estricto de niveles (`INFO`, `ERROR`) optimizados para entornos de producción en contenedores Docker.
+
+## 🔐 Autenticación y Seguridad (JWT)
+
+El motor ahora cuenta con un sistema de autenticación seguro basado en **JSON Web Tokens (JWT)** y contraseñas cifradas con **Bcrypt**.
+
+### Endpoints Disponibles
+
+*   **Registrar Usuario**
+    *   `POST /register`
+    *   *Body JSON:*
+        ```json
+        {
+          "id": "U1",
+          "email": "usuario@correo.com",
+          "password": "tu_password_segura"
+        }
+        ```
+
+*   **Iniciar Sesión (Login)**
+    *   `POST /login`
+    *   *Body JSON:*
+        ```json
+        {
+          "email": "usuario@correo.com",
+          "password": "tu_password_segura"
+        }
+        ```
+    *   *Respuesta:* Retorna un token JWT válido por 24 horas que debe ser enviado en las peticiones protegidas mediante el header `Authorization: Bearer <token>`.
