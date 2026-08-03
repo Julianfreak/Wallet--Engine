@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	_ "github.com/Julianfreak/Wallet--Engine/docs"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/api"
@@ -27,35 +27,46 @@ import (
 // @host localhost:8082
 // @BasePath /
 func main() {
-	fmt.Println("--- Iniciando Billetera Digital con PostgreSQL ---")
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
+	slog.SetDefault(slog.New(jsonHandler))
+
+	slog.Info("--- Iniciando Billetera Digital con PostgreSQL ---")
 
 	// 1. Cargar Configuración desde Viper
 	cfg, err := config.LoadConfig(".")
 	if err != nil {
-		log.Fatalf("Error al cargar la configuración: %v", err)
+		slog.Error("error al cargar la configuración", "error", err)
+		os.Exit(1)
 	}
 
 	// 2. Ejecutar Migraciones (Nueva forma)
 	// Usamos la URL de conexión completa que viene de cfg.DBSource
-	fmt.Println("Verificando/Ejecutando migraciones...")
+	slog.Info("Verificando/Ejecutando migraciones...")
 	if err := repository.RunMigrations(cfg.DBSource); err != nil {
-		log.Fatalf("No se pudieron aplicar las migraciones: %v", err)
+		slog.Error("error al ejecutar migraciones", "error", err)
+		os.Exit(1)
 	}
-	fmt.Println("Estructura de base de datos lista.")
+	slog.Info("Estructura de base de datos lista.")
 
 	// 3. Abrir Conexión a la DB
 	db, err := sql.Open("postgres", cfg.DBSource)
 	if err != nil {
-		log.Fatalf("Error al abrir la conexión: %v", err)
+		slog.Error("error al abrir la conexión", "error", err)
+		os.Exit(1)
 	}
 	defer func() {
-		_ = db.Close()
+		if err := db.Close(); err != nil {
+			slog.Error("error al cerrar la conexión a la base de datos", "error", err)
+		}
 	}()
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Base de datos inaccesible: %v", err)
+		slog.Error("error al pingear la base de datos", "error", err)
+		os.Exit(1)
 	}
-	fmt.Println("Conexión exitosa a PostgreSQL.")
+	slog.Info("Conexión exitosa a PostgreSQL.")
 
 	// Inicialización de adaptadores y servicios
 	ctx := context.Background()
@@ -84,10 +95,11 @@ func main() {
 		httpSwagger.URL("http://localhost:8082/swagger/doc.json"),
 	))
 
-	fmt.Printf("Servidor bancario escuchando en %s...\n", cfg.ServerAddress)
+	slog.Info("Servidor bancario escuchando en %s...", cfg.ServerAddress)
 	// En cmd/api/main.go
-	log.Printf("Servidor de Wallet-Engine iniciado con éxito en http://%s \n", cfg.ServerAddress)
+	slog.Info("Servidor de Wallet-Engine iniciado con éxito en http://%s \n", cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, nil); err != nil {
-		log.Fatalf("Error al encender el servidor web: %v", err)
+		slog.Error("error al encender el servidor web", "error", err)
+		os.Exit(1)
 	}
 }

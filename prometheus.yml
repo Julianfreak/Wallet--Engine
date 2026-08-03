@@ -5,4 +5,4 @@ scrape_configs:
   - job_name: 'wallet-engine-api'
     scrape_interval: 5s
     static_configs:
-      - targets: ['wallet-api:8082'] # ¡Magia de red! Apunta directamente a tu contenedor de Go
+      - targets: ['wallet-api:8082'] # Apunta directamente a tu contenedor de Go

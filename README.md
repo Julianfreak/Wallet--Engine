@@ -69,6 +69,14 @@ El proyecto utiliza `govulncheck` (la herramienta oficial de Go) para escanear v
 
    Para ejecutar la auditoría de seguridad localmente:
 
-   ```bash
+   
    go install golang.org/x/vuln/cmd/govulncheck@latest
    govulncheck ./...
+
+
+## Observabilidad y Logging
+
+Wallet-Engine implementa **Logging Estructurado en formato JSON** utilizando el paquete nativo de la biblioteca estándar de Go (`log/slog`). 
+
+*   **Formato JSON:** Todos los eventos del sistema se emiten estructurados con pares clave-valor, facilitando su indexación y auditoría en plataformas de análisis de registros (como ELK, Datadog o Grafana Loki).
+*   **Niveles de Severidad:** Manejo estricto de niveles (`INFO`, `ERROR`) optimizados para entornos de producción en contenedores Docker.
