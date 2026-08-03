@@ -72,6 +72,10 @@ func main() {
 	accountRepo := repository.NewPostgresAccountRepository(db)
 	accountHandler := api.NewAccountHandler(accountRepo)
 	transactionRepo := repository.NewPostgresTransactionRepository(db)
+	userRepo := repository.NewPostgresUserRepository(db)
+	jwtSecret := "super_secret_wallet_key_2026"
+	authService := application.NewAuthService(userRepo, jwtSecret)
+	authHandler := httpAdapter.NewAuthHandler(authService)
 	consoleLogger := logger.NewConsoleLogger()
 	emailSender := notification.NewEmailSender()
 
@@ -86,6 +90,9 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/transfers", transferHandler.HandleTransfer)
 	http.HandleFunc("/accounts", accountHandler.GetAccount)
+
+	http.HandleFunc("/register", authHandler.HandleRegister)
+	http.HandleFunc("/login", authHandler.HandleLogin)
 
 	// NUEVA RUTA: La página web de Swagger
 	http.HandleFunc("/swagger/", httpSwagger.Handler(
