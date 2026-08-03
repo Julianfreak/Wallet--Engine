@@ -95,9 +95,9 @@ func main() {
 		httpSwagger.URL("http://localhost:8082/swagger/doc.json"),
 	))
 
-	slog.Info("Servidor bancario escuchando en %s...", cfg.ServerAddress)
+	slog.Info("Servidor bancario escuchando", "address", cfg.ServerAddress)
 	// En cmd/api/main.go
-	slog.Info("Servidor de Wallet-Engine iniciado con éxito en http://%s \n", cfg.ServerAddress)
+	slog.Info("Servidor de Wallet-Engine iniciado con éxito", "url", "http://"+cfg.ServerAddress)
 	if err := http.ListenAndServe(cfg.ServerAddress, nil); err != nil {
 		slog.Error("error al encender el servidor web", "error", err)
 		os.Exit(1)
