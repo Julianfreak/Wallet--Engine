@@ -35,6 +35,20 @@ services:
     restart: on-failure
     networks:
       - wallet-network
+  wallet-frontend:
+    build:
+      context: ../client_wallet_engine
+      dockerfile: Dockerfile
+    container_name: wallet-frontend
+    profiles:
+      - prod
+    ports:
+      - "3000:80"
+    depends_on:
+      - wallet-api
+    networks:
+      - wallet-network
+    restart: on-failure
   prometheus:
     image: prom/prometheus:latest
     container_name: wallet-prometheus

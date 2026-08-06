@@ -91,8 +91,8 @@ func main() {
 	http.HandleFunc("/transfers", transferHandler.HandleTransfer)
 	http.HandleFunc("/accounts", accountHandler.GetAccount)
 
-	http.HandleFunc("/register", authHandler.HandleRegister)
-	http.HandleFunc("/login", authHandler.HandleLogin)
+	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))
+	http.HandleFunc("/login", enableCORS(authHandler.HandleLogin))
 
 	// NUEVA RUTA: La página web de Swagger
 	http.HandleFunc("/swagger/", httpSwagger.Handler(
@@ -140,4 +140,22 @@ func main() {
 	}
 
 	slog.Info("aplicación finalizada de forma limpia")
+}
+
+// Función middleware para habilitar CORS
+func enableCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Permitir peticiones desde tu frontend de React
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Si es una petición de preflight (OPTIONS), respondemos inmediatamente con OK
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next(w, r)
+	}
 }
