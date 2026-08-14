@@ -10,6 +10,7 @@ coverage.html
 #docker compose stop
 #air
 #docker compose --profile prod up -d --build
+#docker compose --profile prod up -d --build --remove-orphans
 #docker compose --profile prod stop
 #go get golang.org/x/crypto/bcrypt
 #go get github.com/golang-jwt/jwt/v5
