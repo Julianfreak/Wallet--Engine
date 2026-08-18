@@ -108,3 +108,11 @@ El motor ahora cuenta con un sistema de autenticación seguro basado en **JSON W
         }
         ```
     *   *Respuesta:* Retorna un token JWT válido por 24 horas que debe ser enviado en las peticiones protegidas mediante el header `Authorization: Bearer <token>`.
+
+## 🚀 Nuevas Funcionalidades Implementadas
+
+### Historial de Transacciones
+Se ha integrado el flujo completo para la consulta y registro de movimientos financieros bajo una arquitectura limpia:
+
+- **Backend (`GET /transactions`):** Endpoint expuesto en Go que recupera de manera ordenada (de más reciente a más antigua) todas las transacciones persistidas en PostgreSQL.
+- **Frontend (React):** Consumo dinámico del historial mediante `useEffect` y actualización automática de la tabla tras procesar una transferencia exitosa de forma atómica.

@@ -51,6 +51,20 @@ func (r *FakeTransactionRepository) Save(ctx context.Context, tx *domain.Transac
 	r.SavedTransactions = append(r.SavedTransactions, tx)
 	return nil
 }
+func (r *FakeTransactionRepository) GetAll(ctx context.Context) ([]domain.Transaction, error) {
+	var transactions []domain.Transaction
+	for _, tx := range r.SavedTransactions {
+		if tx != nil {
+			transactions = append(transactions, *tx)
+		}
+	}
+
+	if transactions == nil {
+		return []domain.Transaction{}, nil
+	}
+
+	return transactions, nil
+}
 
 // ==========================================
 // 4. FAKE LOGGER

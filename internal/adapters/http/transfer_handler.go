@@ -48,14 +48,19 @@ func NewTransferHandler(service *application.TransferService) *TransferHandler {
 // @Failure 400 {string} string "Datos inválidos o fondos insuficientes"
 // @Failure 500 {string} string "Error interno del servidor"
 // @Router /transfers [post]
-func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request) {
-	// 1. Validar que estrictamente sea un método POST
-	if r.Method != http.MethodPost {
-		h.respondWithError(w, http.StatusMethodNotAllowed, "método no permitido, usa POST")
-		return
+func (h *TransferHandler) HandleTransactions(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		h.handleCreateTransfer(w, r)
+	case http.MethodGet:
+		h.handleGetTransactions(w, r)
+	default:
+		h.respondWithError(w, http.StatusMethodNotAllowed, "método no permitido, usa GET o POST")
 	}
+}
 
-	// 2. Decodificar el cuerpo JSON de la petición
+// handleCreateTransfer procesa la lógica interna para el POST /transactions
+func (h *TransferHandler) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
 	var req TransferRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.respondWithError(w, http.StatusBadRequest, "formato JSON inválido")
@@ -63,35 +68,45 @@ func (h *TransferHandler) HandleTransfer(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := validate.Struct(req); err != nil {
-		// Si rompe las reglas, devolvemos un HTTP 400 (Bad Request) y abortamos.
-		// El código NO llega a tocar la lógica de negocio ni la base de datos.
 		errMsg := fmt.Sprintf("Datos inválidos: %v", err)
-		// Usamos tu método personalizado para mantener la consistencia
 		h.respondWithError(w, http.StatusBadRequest, errMsg)
 		return
 	}
 
-	// 4. Invocar el núcleo de tu negocio (El caso de uso)
 	ctx := r.Context()
 	cmd := application.TransferCommand{
-		FromAccountID: req.FromAccountID, // o el nombre de tu variable en el handler
+		FromAccountID: req.FromAccountID,
 		ToAccountID:   req.ToAccountID,
 		Amount:        req.Amount,
 	}
 
 	err := h.service.Execute(ctx, cmd)
 	if err != nil {
-		// Si el servicio falla (por ejemplo, fondos insuficientes), respondemos con un 400 o 500 según corresponda
 		h.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// 5. Responder con éxito si todo salió perfecto
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(TransferResponse{
 		Message: "Transferencia procesada de forma atómica y auditable con éxito",
 	})
+}
+
+// handleGetTransactions procesa la lógica interna para el GET /transactions
+func (h *TransferHandler) handleGetTransactions(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Llamada al servicio de negocio para obtener las transacciones
+	transactions, err := h.service.GetTransactions(ctx)
+	if err != nil {
+		h.respondWithError(w, http.StatusInternalServerError, "error al obtener el historial de transacciones")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(transactions)
 }
 
 // Función auxiliar para responder errores en formato JSON limpio

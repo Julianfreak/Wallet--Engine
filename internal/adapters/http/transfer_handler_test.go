@@ -88,7 +88,7 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 			req := httptest.NewRequest(caso.metodo, "/transfers", bytes.NewBuffer(payload))
 			rec := httptest.NewRecorder()
 
-			handler.HandleTransfer(rec, req)
+			handler.HandleTransactions(rec, req)
 
 			if rec.Code != caso.codigoEsperado {
 				t.Errorf("Se esperaba %d, se obtuvo: %d en el caso '%s'", caso.codigoEsperado, rec.Code, caso.nombre)

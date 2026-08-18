@@ -40,6 +40,10 @@ func NewTransferService(
 		notifier:        notif, // <-- Asignamos el notificador
 	}
 }
+func (s *TransferService) GetTransactions(ctx context.Context) ([]domain.Transaction, error) {
+	// Asumiendo que tu struct TransferService tiene inyectado el transactionRepo
+	return s.transactionRepo.GetAll(ctx)
+}
 
 type TransferCommand struct {
 	FromAccountID string

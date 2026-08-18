@@ -22,6 +22,32 @@ func (r *PostgresUserRepository) Save(ctx context.Context, user *domain.User) er
 	return err
 }
 
+// GetAll recupera todas las transacciones almacenadas en la base de datos
+func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Transaction, error) {
+	query := `SELECT id, from_account_id, to_account_id, amount, created_at FROM transactions ORDER BY created_at DESC`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var transactions []domain.Transaction
+	for rows.Next() {
+		var tx domain.Transaction
+		if err := rows.Scan(&tx.ID, &tx.FromAccountID, &tx.ToAccountID, &tx.Amount, &tx.CreatedAt); err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, tx)
+	}
+
+	if transactions == nil {
+		return []domain.Transaction{}, nil
+	}
+
+	return transactions, nil
+}
+
 func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	query := `SELECT id, email, password_hash, created_at FROM users WHERE email = $1`
 	row := r.db.QueryRowContext(ctx, query, email)

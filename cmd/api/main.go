@@ -88,7 +88,7 @@ func main() {
 
 	// Rutas
 	http.Handle("/metrics", promhttp.Handler())
-	http.HandleFunc("/transactions", enableCORS(transferHandler.HandleTransfer))
+	http.HandleFunc("/transactions", enableCORS(transferHandler.HandleTransactions))
 	http.HandleFunc("/accounts", enableCORS(accountHandler.GetAccount))
 
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))

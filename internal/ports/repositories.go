@@ -21,4 +21,5 @@ type AccountRepository interface {
 // TransactionRepository es el puerto de salida para el historial de transacciones.
 type TransactionRepository interface {
 	Save(ctx context.Context, tx *domain.Transaction) error
+	GetAll(ctx context.Context) ([]domain.Transaction, error)
 }
