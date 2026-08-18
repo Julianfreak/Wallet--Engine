@@ -13,6 +13,7 @@ import (
 	_ "github.com/Julianfreak/Wallet--Engine/docs"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/api"
 	httpAdapter "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
+	httphandler "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/logger"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/notification"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
@@ -85,11 +86,14 @@ func main() {
 
 	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager, consoleLogger, emailSender)
 	transferHandler := httpAdapter.NewTransferHandler(transferService)
+	dashboardService := application.NewDashboardService(accountRepo, transactionRepo)
+	dashboardHandler := httphandler.NewDashboardHandler(dashboardService)
 
 	// Rutas
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/transactions", enableCORS(transferHandler.HandleTransactions))
 	http.HandleFunc("/accounts", enableCORS(accountHandler.GetAccount))
+	http.HandleFunc("/dashboard", enableCORS(dashboardHandler.HandleDashboard))
 
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))
 	http.HandleFunc("/login", enableCORS(authHandler.HandleLogin))
