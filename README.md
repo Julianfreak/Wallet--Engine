@@ -116,3 +116,7 @@ Se ha integrado el flujo completo para la consulta y registro de movimientos fin
 
 - **Backend (`GET /transactions`):** Endpoint expuesto en Go que recupera de manera ordenada (de más reciente a más antigua) todas las transacciones persistidas en PostgreSQL.
 - **Frontend (React):** Consumo dinámico del historial mediante `useEffect` y actualización automática de la tabla tras procesar una transferencia exitosa de forma atómica.
+
+### 🛡️ Integridad y Persistencia de Transacciones
+- **Generación de Identificadores Únicos:** Cada transacción procesada a través del `TransferService` genera automáticamente un UUID v4 mediante `github.com/google/uuid`, previniendo colisiones y errores de restricción de clave primaria (`transactions_pkey`) en PostgreSQL.
+- **Transaccionalidad Atómica:** El registro histórico de movimientos se ejecuta de manera síncrona dentro del mismo contexto de transacción SQL (`TxManager`) junto con la actualización de saldos de las cuentas involucradas.
