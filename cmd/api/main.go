@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
 	"github.com/Julianfreak/Wallet--Engine/internal/config"
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
+	"github.com/Julianfreak/Wallet--Engine/internal/infrastructure/auth"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -96,7 +98,22 @@ func main() {
 	http.HandleFunc("/dashboard", enableCORS(dashboardHandler.HandleDashboard))
 
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))
-	http.HandleFunc("/login", enableCORS(authHandler.HandleLogin))
+	http.HandleFunc("/login", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Simulamos un login exitoso para la cuenta A1
+		token, err := auth.GenerateToken("A1")
+		if err != nil {
+			http.Error(w, "Error generando token", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"token": token})
+	}))
 
 	// NUEVA RUTA: La página web de Swagger
 	http.HandleFunc("/swagger/", httpSwagger.Handler(
