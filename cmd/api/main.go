@@ -75,6 +75,8 @@ func main() {
 	accountHandler := api.NewAccountHandler(accountRepo)
 	transactionRepo := repository.NewPostgresTransactionRepository(db)
 	userRepo := repository.NewPostgresUserRepository(db)
+	userService := application.NewUserService(userRepo)
+	userHandler := httpAdapter.NewUserHandler(userService)
 	jwtSecret := "super_secret_wallet_key_2026"
 	authService := application.NewAuthService(userRepo, jwtSecret)
 	authHandler := httpAdapter.NewAuthHandler(authService)
@@ -95,7 +97,7 @@ func main() {
 	http.HandleFunc("/transactions", enableCORS(transferHandler.HandleTransactions))
 	http.HandleFunc("/accounts", enableCORS(accountHandler.GetAccount))
 	http.HandleFunc("/dashboard", enableCORS(dashboardHandler.HandleDashboard))
-
+	http.HandleFunc("/profile", enableCORS(httpAdapter.AuthMiddleware(userHandler.HandleProfile)))
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))
 	http.HandleFunc("/login", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

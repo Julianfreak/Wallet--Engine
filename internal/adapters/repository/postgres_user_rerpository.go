@@ -22,7 +22,43 @@ func (r *PostgresUserRepository) Save(ctx context.Context, user *domain.User) er
 	return err
 }
 
-// GetAll recupera todas las transacciones almacenadas en la base de datos
+func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	query := `SELECT id, email, password_hash, created_at FROM users WHERE email = $1`
+	row := r.db.QueryRowContext(ctx, query, email)
+
+	var user domain.User
+	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("usuario no encontrado")
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *PostgresUserRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
+	query := `SELECT id, email, password_hash, created_at FROM users WHERE id = $1`
+	row := r.db.QueryRowContext(ctx, query, id)
+
+	var user domain.User
+	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("usuario no encontrado")
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *PostgresUserRepository) Update(ctx context.Context, user *domain.User) error {
+	query := `UPDATE users SET email = $1, password_hash = $2 WHERE id = $3`
+	_, err := r.db.ExecContext(ctx, query, user.Email, user.PasswordHash, user.ID)
+	return err
+}
 func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Transaction, error) {
 	query := `SELECT id, from_account_id, to_account_id, amount, created_at FROM transactions ORDER BY created_at DESC`
 
@@ -48,20 +84,4 @@ func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Tr
 	}
 
 	return transactions, nil
-}
-
-func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
-	query := `SELECT id, email, password_hash, created_at FROM users WHERE email = $1`
-	row := r.db.QueryRowContext(ctx, query, email)
-
-	var user domain.User
-	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("usuario no encontrado")
-		}
-		return nil, err
-	}
-
-	return &user, nil
 }

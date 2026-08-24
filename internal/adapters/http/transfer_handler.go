@@ -49,6 +49,10 @@ func NewTransferHandler(service *application.TransferService) *TransferHandler {
 // @Failure 500 {string} string "Error interno del servidor"
 // @Router /transfers [post]
 func (h *TransferHandler) HandleTransactions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
 	switch r.Method {
 	case http.MethodPost:
 		h.handleCreateTransfer(w, r)
@@ -61,6 +65,7 @@ func (h *TransferHandler) HandleTransactions(w http.ResponseWriter, r *http.Requ
 
 // handleCreateTransfer procesa la lógica interna para el POST /transactions
 func (h *TransferHandler) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
+
 	var req TransferRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.respondWithError(w, http.StatusBadRequest, "formato JSON inválido")
