@@ -30,7 +30,9 @@ func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Tr
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var transactions []domain.Transaction
 	for rows.Next() {

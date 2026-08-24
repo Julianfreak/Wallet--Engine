@@ -14,7 +14,6 @@ import (
 	_ "github.com/Julianfreak/Wallet--Engine/docs"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/api"
 	httpAdapter "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
-	httphandler "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/logger"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/notification"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
@@ -89,7 +88,7 @@ func main() {
 	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager, consoleLogger, emailSender)
 	transferHandler := httpAdapter.NewTransferHandler(transferService)
 	dashboardService := application.NewDashboardService(accountRepo, transactionRepo)
-	dashboardHandler := httphandler.NewDashboardHandler(dashboardService)
+	dashboardHandler := httpAdapter.NewDashboardHandler(dashboardService)
 
 	// Rutas
 	http.Handle("/metrics", promhttp.Handler())
@@ -112,7 +111,7 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"token": token})
+		_ = json.NewEncoder(w).Encode(map[string]string{"token": token})
 	}))
 
 	// NUEVA RUTA: La página web de Swagger
