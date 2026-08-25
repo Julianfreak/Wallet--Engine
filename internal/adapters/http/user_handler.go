@@ -17,16 +17,16 @@ func NewUserHandler(service *application.UserService) *UserHandler {
 
 // HandleProfile enruta según el método HTTP (GET para consultar, PUT para actualizar)
 func (h *UserHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
-	// Extraer el account_id inyectado por el AuthMiddleware
-	accountID, ok := r.Context().Value(AccountIDKey).(string)
-	if !ok || accountID == "" {
+	// El contexto ahora trae el email del usuario
+	email, ok := r.Context().Value(AccountIDKey).(string)
+	if !ok || email == "" {
 		http.Error(w, `{"error": "no autorizado"}`, http.StatusUnauthorized)
 		return
 	}
 
 	switch r.Method {
 	case http.MethodGet:
-		user, err := h.service.GetProfile(r.Context(), accountID)
+		user, err := h.service.GetProfileByEmail(r.Context(), email)
 		if err != nil {
 			http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusNotFound)
 			return
@@ -36,14 +36,21 @@ func (h *UserHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodPut:
 		var req struct {
-			Email string `json:"email" validate:"required,email"`
+			Email       string `json:"email"`
+			NewPassword string `json:"new_password,omitempty"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, `{"error": "formato JSON inválido"}`, http.StatusBadRequest)
 			return
 		}
 
-		err := h.service.UpdateProfile(r.Context(), accountID, req.Email)
+		// Si el usuario no envió un nuevo correo, conservamos el actual
+		targetEmail := req.Email
+		if targetEmail == "" {
+			targetEmail = email
+		}
+
+		err := h.service.UpdateProfileByEmail(r.Context(), email, targetEmail, req.NewPassword)
 		if err != nil {
 			http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
 			return
@@ -51,6 +58,15 @@ func (h *UserHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{"message": "perfil actualizado exitosamente"})
+
+	case http.MethodDelete:
+		err := h.service.DeleteProfileByEmail(r.Context(), email)
+		if err != nil {
+			http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"message": "cuenta de usuario eliminada exitosamente"})
 
 	default:
 		http.Error(w, "método no permitido", http.StatusMethodNotAllowed)
