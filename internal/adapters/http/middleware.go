@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -33,15 +34,22 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Extraemos el correo con seguridad absoluta (es un string garantizado)
-		email, ok := claims["email"].(string)
-		if !ok || email == "" {
-			http.Error(w, `{"error": "token sin correo válido"}`, http.StatusUnauthorized)
+		// Intentamos extraer el email; si no existe, usamos el account_id
+		var identifier string
+		if email, ok := claims["email"].(string); ok && email != "" {
+			identifier = email
+		} else if accID, ok := claims["account_id"].(string); ok && accID != "" {
+			identifier = accID
+		} else if accIDFloat, ok := claims["account_id"].(float64); ok {
+			identifier = fmt.Sprintf("%.0f", accIDFloat)
+		}
+
+		if identifier == "" {
+			http.Error(w, `{"error": "token sin identificador válido"}`, http.StatusUnauthorized)
 			return
 		}
 
-		// Inyectamos el email en el contexto
-		ctx := context.WithValue(r.Context(), AccountIDKey, email)
+		ctx := context.WithValue(r.Context(), AccountIDKey, identifier)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }

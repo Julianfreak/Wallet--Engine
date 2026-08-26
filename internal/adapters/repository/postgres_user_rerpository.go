@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 )
@@ -22,12 +23,20 @@ func (r *PostgresUserRepository) Save(ctx context.Context, user *domain.User) er
 	return err
 }
 
-func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
-	query := `SELECT id, email, COALESCE(balance, 0), password_hash, created_at FROM users WHERE email = $1`
-	row := r.db.QueryRowContext(ctx, query, email)
+func (r *PostgresUserRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
+	fmt.Printf("🔍 REPOSITORIO - Buscando usuario en BD con ID: '%s'\n", id)
+
+	query := `SELECT id, email, password_hash, created_at 
+              FROM users 
+              WHERE id = $1`
 
 	var user domain.User
-	err := row.Scan(&user.ID, &user.Email, &user.Balance, &user.PasswordHash, &user.CreatedAt)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("usuario no encontrado")
@@ -38,12 +47,18 @@ func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) 
 	return &user, nil
 }
 
-func (r *PostgresUserRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
-	query := `SELECT id, email, password_hash, created_at FROM users WHERE id = $1`
-	row := r.db.QueryRowContext(ctx, query, id)
+func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	query := `SELECT id, email, password_hash, created_at 
+              FROM users 
+              WHERE email = $1`
 
 	var user domain.User
-	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt)
+	err := r.db.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("usuario no encontrado")

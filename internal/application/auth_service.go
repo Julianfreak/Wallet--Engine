@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
@@ -52,11 +53,11 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		return "", errors.New("credenciales inválidas")
 	}
 
+	fmt.Printf("📦 GENERANDO TOKEN - Usuario ID: %v | Email: '%s'\n", user.ID, user.Email)
 	// Generar el Token JWT con una vigencia de 24 horas
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"account_id": user.Email,
+		"exp":        time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(s.jwtSecret))
