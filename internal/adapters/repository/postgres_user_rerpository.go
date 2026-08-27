@@ -24,8 +24,7 @@ func (r *PostgresUserRepository) Save(ctx context.Context, user *domain.User) er
 }
 
 func (r *PostgresUserRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
-	fmt.Printf("🔍 REPOSITORIO - Buscando usuario en BD con ID: '%s'\n", id)
-
+	fmt.Printf("🔍 DB QUERY Buscando ID exacto: '%s'\n", id)
 	query := `SELECT id, email, password_hash, created_at 
               FROM users 
               WHERE id = $1`
@@ -48,9 +47,10 @@ func (r *PostgresUserRepository) FindByID(ctx context.Context, id string) (*doma
 }
 
 func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
-	query := `SELECT id, email, password_hash, created_at 
-              FROM users 
-              WHERE email = $1`
+	// 🔍 Añade esta línea para ver el valor exacto y su longitud
+	fmt.Printf("🔍 DB QUERY - Buscando email exacto: '%s' (longitud: %d)\n", email, len(email))
+
+	query := `SELECT id, email, password_hash, created_at FROM users WHERE email = $1`
 
 	var user domain.User
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
@@ -61,7 +61,8 @@ func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) 
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("usuario no encontrado")
+			fmt.Printf("❌ No se encontró ningún registro con el email: '%s'\n", email)
+			return nil, errors.New("usuario no encontrado precaución")
 		}
 		return nil, err
 	}

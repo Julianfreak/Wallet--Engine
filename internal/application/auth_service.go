@@ -9,6 +9,7 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,14 +26,14 @@ func NewAuthService(userRepo *repository.PostgresUserRepository, jwtSecret strin
 }
 
 // Register registra un nuevo usuario cifrando su contraseña con bcrypt
-func (s *AuthService) Register(ctx context.Context, id, email, password string) error {
+func (s *AuthService) Register(ctx context.Context, _, email, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
 	user := &domain.User{
-		ID:           id,
+		ID:           uuid.New().String(), // Garantiza un ID único y válido
 		Email:        email,
 		PasswordHash: string(hashedPassword),
 	}

@@ -20,7 +20,6 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
 	"github.com/Julianfreak/Wallet--Engine/internal/config"
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
-	"github.com/Julianfreak/Wallet--Engine/internal/infrastructure/auth"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -101,14 +100,23 @@ func main() {
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))
 	http.HandleFunc("/login", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+			http.Error(w, `{"error": "Método no permitido"}`, http.StatusMethodNotAllowed)
 			return
 		}
 
-		// Simulamos un login exitoso para la cuenta A1
-		token, err := auth.GenerateToken("A1")
+		var req struct {
+			Email    string `json:"email"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, `{"error": "formato JSON inválido"}`, http.StatusBadRequest)
+			return
+		}
+
+		// El login SOLO debe validar credenciales y generar el token
+		token, err := authService.Login(r.Context(), req.Email, req.Password)
 		if err != nil {
-			http.Error(w, "Error generando token", http.StatusInternalServerError)
+			http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusUnauthorized)
 			return
 		}
 
