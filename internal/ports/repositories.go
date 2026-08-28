@@ -14,12 +14,14 @@ type TxManager interface {
 // AccountRepository es el puerto de salida para el almacenamiento de cuentas.
 // Cualquier base de datos (Postgres, MySQL, Mock) deberá implementar estas funciones.
 type AccountRepository interface {
+	Save(ctx context.Context, account *domain.Account) error
 	GetByID(ctx context.Context, id string) (*domain.Account, error)
-	Save(ctx context.Context, acc *domain.Account) error
+	FindByOwner(ctx context.Context, owner string) ([]domain.Account, error)
 }
 
 // TransactionRepository es el puerto de salida para el historial de transacciones.
 type TransactionRepository interface {
 	Save(ctx context.Context, tx *domain.Transaction) error
 	GetAll(ctx context.Context) ([]domain.Transaction, error)
+	GetByAccountID(ctx context.Context, accountID string) ([]domain.Transaction, error)
 }

@@ -24,29 +24,24 @@ func NewDashboardService(accountRepo ports.AccountRepository, transactionRepo po
 	}
 }
 
-func (s *DashboardService) GetDashboardData(ctx context.Context) (DashboardData, error) {
-	// 1. Obtener transacciones usando el método GetAll que acabamos de crear
-	transactions, err := s.transactionRepo.GetAll(ctx)
+func (s *DashboardService) GetDashboardData(ctx context.Context, userEmail string) (DashboardData, error) {
+
+	accounts, err := s.accountRepo.FindByOwner(ctx, userEmail)
 	if err != nil {
 		return DashboardData{}, err
 	}
 
-	// 2. Obtener cuentas (si tienes un método para listar cuentas, úsalo aquí.
-	// De lo contrario, puedes consultar las cuentas por defecto A1 y A2 o agregarlas a la respuesta).
-	// Ejemplo básico consultando las cuentas principales:
-	acc1, _ := s.accountRepo.GetByID(ctx, "A1")
-	acc2, _ := s.accountRepo.GetByID(ctx, "A2")
-
-	var accounts []domain.Account
-	if acc1 != nil {
-		accounts = append(accounts, *acc1)
-	}
-	if acc2 != nil {
-		accounts = append(accounts, *acc2)
+	// 3. Obtener solo las transacciones correspondientes a las cuentas de este usuario
+	var userTransactions []domain.Transaction
+	for _, acc := range accounts {
+		txs, err := s.transactionRepo.GetByAccountID(ctx, acc.ID)
+		if err == nil {
+			userTransactions = append(userTransactions, txs...)
+		}
 	}
 
 	return DashboardData{
 		Accounts:     accounts,
-		Transactions: transactions,
+		Transactions: userTransactions,
 	}, nil
 }

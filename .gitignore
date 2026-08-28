@@ -10,7 +10,12 @@ coverage.html
 #docker compose stop
 #air
 #docker compose --profile prod up -d --build
+#docker compose --profile prod down
 #docker compose --profile prod up -d --build --remove-orphans
+
+#docker exec -it wallet--engine-wallet-db-1 psql -U wallet_user wallet_db -c "TRUNCATE TABLE users CASCADE;"
+#docker exec -it wallet--engine-wallet-db-1 psql -U wallet_user -d wallet_db
+
 #docker compose --profile prod stop
 #go get golang.org/x/crypto/bcrypt
 #go get github.com/golang-jwt/jwt/v5

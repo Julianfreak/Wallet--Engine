@@ -20,7 +20,7 @@ func (f *FakeTxManager) WithTransaction(ctx context.Context, fn func(ctx context
 // 2. FAKE ACCOUNT REPOSITORY
 // ==========================================
 type FakeAccountRepository struct {
-	Accounts map[string]*domain.Account // "A" Mayúscula para ser público
+	Accounts map[string]*domain.Account
 }
 
 func (r *FakeAccountRepository) GetByID(ctx context.Context, id string) (*domain.Account, error) {
@@ -91,4 +91,30 @@ func (f *FakeNotificationSender) Send(recipient string, message string) error {
 		f.Done <- true // Evita bloquear si el canal no está inicializado
 	}
 	return nil
+}
+
+// Añade este método dentro de FakeAccountRepository en tu archivo fakes.go
+func (r *FakeAccountRepository) FindByOwner(ctx context.Context, owner string) ([]domain.Account, error) {
+	var accounts []domain.Account
+	for _, acc := range r.Accounts {
+		if acc != nil && acc.Owner == owner {
+			accounts = append(accounts, *acc)
+		}
+	}
+	if accounts == nil {
+		return []domain.Account{}, nil
+	}
+	return accounts, nil
+}
+func (r *FakeTransactionRepository) GetByAccountID(ctx context.Context, accountID string) ([]domain.Transaction, error) {
+	var transactions []domain.Transaction
+	for _, tx := range r.SavedTransactions {
+		if tx != nil && (tx.FromAccountID == accountID || tx.ToAccountID == accountID) {
+			transactions = append(transactions, *tx)
+		}
+	}
+	if transactions == nil {
+		return []domain.Transaction{}, nil
+	}
+	return transactions, nil
 }

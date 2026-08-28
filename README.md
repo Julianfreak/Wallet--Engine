@@ -120,3 +120,10 @@ Se ha integrado el flujo completo para la consulta y registro de movimientos fin
 ### 🛡️ Integridad y Persistencia de Transacciones
 - **Generación de Identificadores Únicos:** Cada transacción procesada a través del `TransferService` genera automáticamente un UUID v4 mediante `github.com/google/uuid`, previniendo colisiones y errores de restricción de clave primaria (`transactions_pkey`) en PostgreSQL.
 - **Transaccionalidad Atómica:** El registro histórico de movimientos se ejecuta de manera síncrona dentro del mismo contexto de transacción SQL (`TxManager`) junto con la actualización de saldos de las cuentas involucradas.
+
+## 🚀 Actualizaciones Recientes (Arquitectura y Seguridad)
+
+* **Aislamiento Multi-usuario Dinámico:** Integración de los métodos `FindByOwner` y `GetByAccountID` para garantizar que las consultas de saldos, dashboard y transacciones estén estrictamente ligadas al usuario autenticado.
+* **Creación Automática de Billeteras:** Al registrarse un nuevo usuario en el sistema (`/register`), se genera de forma transaccional una cuenta bancaria única (`ACC-xxxx`) con un balance inicial predeterminado.
+* **Robustez en la Autenticación JWT:** Unificación y estandarización de la clave secreta compartida entre el módulo de login y el middleware de protección de rutas.
+* **Flexibilidad de Endpoints HTTP:** Actualización del handler de transacciones para soportar operaciones duales (`POST` para transferencias y `GET` para el historial de movimientos).

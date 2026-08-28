@@ -77,7 +77,7 @@ func main() {
 	userService := application.NewUserService(userRepo)
 	userHandler := httpAdapter.NewUserHandler(userService)
 	jwtSecret := "super_secret_wallet_key_2026"
-	authService := application.NewAuthService(userRepo, jwtSecret)
+	authService := application.NewAuthService(userRepo, accountRepo, jwtSecret)
 	authHandler := httpAdapter.NewAuthHandler(authService)
 	consoleLogger := logger.NewConsoleLogger()
 	emailSender := notification.NewEmailSender()

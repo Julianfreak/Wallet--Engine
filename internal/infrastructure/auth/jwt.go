@@ -8,23 +8,21 @@ import (
 )
 
 // En producción, esta clave debe venir de variables de entorno (.env)
-var SecretKey = []byte("super_secreto_wallet_engine_2026")
+var jwtSecret = []byte("super_secret_wallet_key_2026")
 
 // GenerateToken crea un JWT válido por 24 horas para un accountID específico
-func GenerateToken(accountID string) (string, error) {
+func GenerateToken(email string) (string, error) {
 	claims := jwt.MapClaims{
-		"account_id": accountID,
+		"account_id": email,
 		"exp":        time.Now().Add(time.Hour * 24).Unix(),
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(SecretKey)
+	return token.SignedString(jwtSecret) // Firma con jwtSecret
 }
 
-// ValidateToken verifica la firma y retorna los datos (claims) si es válido
 func ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return SecretKey, nil
+		return jwtSecret, nil // Valida con el MISMO jwtSecret
 	})
 
 	if err != nil || !token.Valid {
@@ -33,7 +31,7 @@ func ValidateToken(tokenString string) (jwt.MapClaims, error) {
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, errors.New("claims inválidos")
+		return nil, errors.New("claims del token inválidos")
 	}
 
 	return claims, nil

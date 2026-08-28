@@ -55,10 +55,11 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 			textoEsperado:  "failed on the 'nefield' tag",
 		},
 		{
-			nombre:         "Falla por método incorrecto (GET)",
-			metodo:         http.MethodGet,
-			cuerpoRequest:  `{"from_account_id": "A1", "to_account_id": "A2", "amount": 50.0}`,
+			nombre:         "Falla por método incorrecto (PUT)",
+			metodo:         http.MethodPut,
+			cuerpoRequest:  `{}`,
 			codigoEsperado: http.StatusMethodNotAllowed,
+			textoEsperado:  "", // Si no valida texto de error en este caso específico
 		},
 		{
 			nombre:         "Falla por JSON inválido",

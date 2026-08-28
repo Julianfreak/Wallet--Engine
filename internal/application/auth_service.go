@@ -14,31 +14,44 @@ import (
 )
 
 type AuthService struct {
-	userRepo  *repository.PostgresUserRepository
-	jwtSecret string
+	userRepo    *repository.PostgresUserRepository
+	accountRepo *repository.PostgresAccountRepository // 1. Añadir el repositorio de cuentas
+	jwtSecret   string
 }
 
-func NewAuthService(userRepo *repository.PostgresUserRepository, jwtSecret string) *AuthService {
+func NewAuthService(userRepo *repository.PostgresUserRepository, accountRepo *repository.PostgresAccountRepository, jwtSecret string) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
-		jwtSecret: jwtSecret,
+		userRepo:    userRepo,
+		accountRepo: accountRepo,
+		jwtSecret:   jwtSecret,
 	}
 }
 
-// Register registra un nuevo usuario cifrando su contraseña con bcrypt
 func (s *AuthService) Register(ctx context.Context, _, email, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
+	userID := uuid.New().String()
 	user := &domain.User{
-		ID:           uuid.New().String(), // Garantiza un ID único y válido
+		ID:           userID,
 		Email:        email,
 		PasswordHash: string(hashedPassword),
 	}
 
-	return s.userRepo.Save(ctx, user)
+	if err := s.userRepo.Save(ctx, user); err != nil {
+		return err
+	}
+
+	// 2. Crear automáticamente una cuenta predeterminada para este usuario
+	account := &domain.Account{
+		ID:      "ACC-" + userID[:8], // ID único basado en su UUID
+		Owner:   email,
+		Balance: 1000.00, // Saldo inicial de prueba opcional
+	}
+
+	return s.accountRepo.Save(ctx, account)
 }
 
 // Login valida las credenciales del usuario y retorna un token JWT firmado

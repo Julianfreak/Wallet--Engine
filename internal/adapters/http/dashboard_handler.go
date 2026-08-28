@@ -17,23 +17,20 @@ func NewDashboardHandler(service *application.DashboardService) *DashboardHandle
 
 // HandleDashboard procesa la petición GET /dashboard
 func (h *DashboardHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "método no permitido, usa GET"})
+	// 1. Extraer el correo del usuario autenticado desde el contexto del middleware
+	userEmail, ok := r.Context().Value(AccountIDKey).(string)
+	if !ok || userEmail == "" {
+		http.Error(w, `{"error": "no autorizado"}`, http.StatusUnauthorized)
 		return
 	}
 
-	ctx := r.Context()
-	data, err := h.service.GetDashboardData(ctx)
+	// 2. Pasar el userEmail como segundo argumento al servicio
+	data, err := h.service.GetDashboardData(r.Context(), userEmail)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(data)
 }

@@ -75,16 +75,16 @@ func (r *PostgresUserRepository) Update(ctx context.Context, user *domain.User) 
 	_, err := r.db.ExecContext(ctx, query, user.Email, user.PasswordHash, user.ID)
 	return err
 }
-func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Transaction, error) {
-	query := `SELECT id, from_account_id, to_account_id, amount, created_at FROM transactions ORDER BY created_at DESC`
+func (r *PostgresTransactionRepository) GetByAccountID(ctx context.Context, accountID string) ([]domain.Transaction, error) {
+	query := `SELECT id, from_account_id, to_account_id, amount, created_at 
+              FROM transactions 
+              WHERE from_account_id = $1 OR to_account_id = $1`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, accountID)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = rows.Close()
-	}()
+	defer rows.Close()
 
 	var transactions []domain.Transaction
 	for rows.Next() {
@@ -94,15 +94,47 @@ func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Tr
 		}
 		transactions = append(transactions, tx)
 	}
-
-	if transactions == nil {
-		return []domain.Transaction{}, nil
-	}
-
 	return transactions, nil
+}
+
+func (r *PostgresAccountRepository) FindByOwner(ctx context.Context, owner string) ([]domain.Account, error) {
+	query := `SELECT id, owner, balance FROM accounts WHERE owner = $1`
+	rows, err := r.db.QueryContext(ctx, query, owner)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []domain.Account
+	for rows.Next() {
+		var acc domain.Account
+		if err := rows.Scan(&acc.ID, &acc.Owner, &acc.Balance); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, acc)
+	}
+	return accounts, nil
 }
 func (r *PostgresUserRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM users WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
+}
+func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Transaction, error) {
+	query := `SELECT id, from_account_id, to_account_id, amount, created_at FROM transactions`
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var transactions []domain.Transaction
+	for rows.Next() {
+		var tx domain.Transaction
+		if err := rows.Scan(&tx.ID, &tx.FromAccountID, &tx.ToAccountID, &tx.Amount, &tx.CreatedAt); err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, tx)
+	}
+	return transactions, nil
 }
