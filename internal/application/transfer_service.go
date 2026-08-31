@@ -42,8 +42,36 @@ func NewTransferService(
 	}
 }
 
-func (s *TransferService) GetTransactions(ctx context.Context) ([]domain.Transaction, error) {
-	return s.transactionRepo.GetAll(ctx)
+// En internal/application/transfer_service.go
+func (s *TransferService) GetTransactions(ctx context.Context, ownerEmail string) ([]domain.Transaction, error) {
+	// 1. Buscar las cuentas que pertenecen a este usuario
+	accounts, err := s.accountRepo.FindByOwner(ctx, ownerEmail)
+	if err != nil {
+		return nil, err
+	}
+
+	var allTransactions []domain.Transaction
+	seenTxIDs := make(map[string]bool)
+
+	// 2. Extraer las transacciones de cada cuenta del usuario (evitando duplicados)
+	for _, acc := range accounts {
+		txs, err := s.transactionRepo.GetByAccountID(ctx, acc.ID)
+		if err != nil {
+			continue
+		}
+		for _, tx := range txs {
+			if !seenTxIDs[tx.ID] {
+				seenTxIDs[tx.ID] = true
+				allTransactions = append(allTransactions, tx)
+			}
+		}
+	}
+
+	if allTransactions == nil {
+		return []domain.Transaction{}, nil
+	}
+
+	return allTransactions, nil
 }
 
 type TransferCommand struct {
@@ -52,7 +80,8 @@ type TransferCommand struct {
 	Amount        float64
 }
 
-func (s *TransferService) Execute(ctx context.Context, cmd TransferCommand) error {
+// Añade ownerEmail como parámetro para validar la titularidad
+func (s *TransferService) Execute(ctx context.Context, ownerEmail string, cmd TransferCommand) error {
 	startTime := time.Now()
 	defer func() {
 		metrics.TransferDuration.Observe(time.Since(startTime).Seconds())
@@ -62,12 +91,10 @@ func (s *TransferService) Execute(ctx context.Context, cmd TransferCommand) erro
 		return ErrSameAccount
 	}
 
-	// 2. Regla de negocio: Monto válido
 	if cmd.Amount <= 0 {
 		return errors.New("el monto de la transferencia debe ser mayor a cero")
 	}
 
-	// 3. Ejecutar dentro de una transacción atómica usando el TxManager
 	err := s.txManager.WithTransaction(ctx, func(ctxTx context.Context) error {
 		// A. Obtener cuenta de origen
 		fromAccount, err := s.accountRepo.GetByID(ctxTx, cmd.FromAccountID)
@@ -76,6 +103,11 @@ func (s *TransferService) Execute(ctx context.Context, cmd TransferCommand) erro
 		}
 		if fromAccount == nil {
 			return fmt.Errorf("%w: %s", ErrAccountNotFound, cmd.FromAccountID)
+		}
+
+		// VALIDACIÓN DE SEGURIDAD: Verificar que la cuenta de origen pertenezca al usuario autenticado
+		if fromAccount.Owner != ownerEmail {
+			return errors.New("no autorizado: la cuenta de origen no pertenece al usuario autenticado")
 		}
 
 		// B. Validar fondos suficientes
@@ -106,11 +138,11 @@ func (s *TransferService) Execute(ctx context.Context, cmd TransferCommand) erro
 
 		// F. Registrar la transacción histórica con ID único y fecha
 		txRecord := &domain.Transaction{
-			ID:            uuid.New().String(), // <-- Garantiza ID único evitando el error 23505
+			ID:            uuid.New().String(),
 			FromAccountID: cmd.FromAccountID,
 			ToAccountID:   cmd.ToAccountID,
 			Amount:        cmd.Amount,
-			CreatedAt:     time.Now(), // <-- Asigna la fecha actual
+			CreatedAt:     time.Now(),
 		}
 		if err := s.transactionRepo.Save(ctxTx, txRecord); err != nil {
 			return fmt.Errorf("error al guardar el registro de transacción: %w", err)
@@ -125,7 +157,6 @@ func (s *TransferService) Execute(ctx context.Context, cmd TransferCommand) erro
 
 	s.logger.Info(fmt.Sprintf("Transferencia exitosa de %.2f desde %s hacia %s", cmd.Amount, cmd.FromAccountID, cmd.ToAccountID))
 
-	// Enviar notificación asíncrona
 	go func() {
 		_ = s.notifier.Send(cmd.ToAccountID, "Has recibido una transferencia exitosa")
 	}()

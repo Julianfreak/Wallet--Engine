@@ -80,8 +80,13 @@ func (h *TransferHandler) handleCreateTransfer(w http.ResponseWriter, r *http.Re
 		ToAccountID:   req.ToAccountID,
 		Amount:        req.Amount,
 	}
+	userEmail, ok := ctx.Value(AccountIDKey).(string)
+	if !ok || userEmail == "" {
+		h.respondWithError(w, http.StatusUnauthorized, "no autorizado")
+		return
+	}
 
-	err := h.service.Execute(ctx, cmd)
+	err := h.service.Execute(ctx, userEmail, cmd)
 	if err != nil {
 		h.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -95,11 +100,18 @@ func (h *TransferHandler) handleCreateTransfer(w http.ResponseWriter, r *http.Re
 }
 
 // handleGetTransactions procesa la lógica interna para el GET /transactions
+// En internal/adapters/http/transfer_handler.go
 func (h *TransferHandler) handleGetTransactions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	// Llamada al servicio de negocio para obtener las transacciones
-	transactions, err := h.service.GetTransactions(ctx)
+	userEmail, ok := ctx.Value(AccountIDKey).(string)
+	if !ok || userEmail == "" {
+		h.respondWithError(w, http.StatusUnauthorized, "no autorizado")
+		return
+	}
+
+	// Pasamos el correo del usuario autenticado al servicio
+	transactions, err := h.service.GetTransactions(ctx, userEmail)
 	if err != nil {
 		h.respondWithError(w, http.StatusInternalServerError, "error al obtener el historial de transacciones")
 		return

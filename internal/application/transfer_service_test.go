@@ -36,7 +36,7 @@ func TestTransferService_Execute_Success(t *testing.T) {
 		Amount:        400.0,
 	}
 
-	err := service.Execute(ctx, cmd)
+	err := service.Execute(ctx, "Julian", cmd)
 	assert.NoError(t, err)
 
 	// Sincronización de la goroutine
@@ -99,14 +99,14 @@ func TestTransferService_Execute_InsufficientFunds(t *testing.T) {
 		Amount:        100.00,
 	}
 
-	err := service.Execute(ctx, cmd)
+	err := service.Execute(ctx, "Julian", cmd)
 
 	if err == nil {
 		t.Error("se esperaba un fallo por fondos insuficientes, pero el servicio retornó éxito")
 	}
 
 	// Intento de transferencia a cuenta inexistente para agotar los escenarios analizados
-	err = service.Execute(ctx, cmd)
+	err = service.Execute(ctx, "Julian", cmd)
 
 	if err == nil {
 		t.Error("se esperaba un fallo por cuenta inexistente, pero retornó éxito")

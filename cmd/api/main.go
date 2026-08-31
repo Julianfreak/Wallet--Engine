@@ -19,7 +19,6 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/repository"
 	"github.com/Julianfreak/Wallet--Engine/internal/application"
 	"github.com/Julianfreak/Wallet--Engine/internal/config"
-	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -68,7 +67,7 @@ func main() {
 	slog.Info("Conexión exitosa a PostgreSQL.")
 
 	// Inicialización de adaptadores y servicios
-	ctx := context.Background()
+	//ctx := context.Background()
 	txManager := repository.NewPostgresTxManager(db)
 	accountRepo := repository.NewPostgresAccountRepository(db)
 	accountHandler := api.NewAccountHandler(accountRepo)
@@ -82,10 +81,6 @@ func main() {
 	consoleLogger := logger.NewConsoleLogger()
 	emailSender := notification.NewEmailSender()
 
-	// Sembrado de datos iniciales (Solo para pruebas iniciales)
-	_ = accountRepo.Save(ctx, &domain.Account{ID: "A1", Owner: "Julian", Balance: 1000})
-	_ = accountRepo.Save(ctx, &domain.Account{ID: "A2", Owner: "Mercado Libre", Balance: 0})
-
 	transferService := application.NewTransferService(accountRepo, transactionRepo, txManager, consoleLogger, emailSender)
 	transferHandler := httpAdapter.NewTransferHandler(transferService)
 	dashboardService := application.NewDashboardService(accountRepo, transactionRepo)
@@ -93,9 +88,9 @@ func main() {
 
 	// Rutas
 	http.Handle("/metrics", promhttp.Handler())
-	http.HandleFunc("/transactions", enableCORS(transferHandler.HandleTransactions))
+	http.HandleFunc("/transactions", enableCORS(httpAdapter.AuthMiddleware(transferHandler.HandleTransactions)))
 	http.HandleFunc("/accounts", enableCORS(accountHandler.GetAccount))
-	http.HandleFunc("/dashboard", enableCORS(dashboardHandler.HandleDashboard))
+	http.HandleFunc("/dashboard", enableCORS(httpAdapter.AuthMiddleware(dashboardHandler.HandleDashboard)))
 	http.HandleFunc("/profile", enableCORS(httpAdapter.AuthMiddleware(userHandler.HandleProfile)))
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))
 	http.HandleFunc("/login", enableCORS(func(w http.ResponseWriter, r *http.Request) {
