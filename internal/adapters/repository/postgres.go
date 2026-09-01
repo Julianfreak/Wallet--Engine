@@ -86,9 +86,9 @@ func (r *PostgresAccountRepository) GetByID(ctx context.Context, id string) (*do
 
 func (r *PostgresAccountRepository) Save(ctx context.Context, acc *domain.Account) error {
 	query := `
-		INSERT INTO accounts (id, owner, balance) 
+		INSERT INTO accounts (id, owner, balance)
 		VALUES ($1, $2, $3)
-		ON CONFLICT (id) 
+		ON CONFLICT (id)
 		DO UPDATE SET balance = EXCLUDED.balance`
 
 	_, err := r.getExecutor(ctx).ExecContext(ctx, query, acc.ID, acc.Owner, acc.Balance)
@@ -114,4 +114,23 @@ func (r *PostgresTransactionRepository) Save(ctx context.Context, tx *domain.Tra
 	query := `INSERT INTO transactions (id, from_account_id, to_account_id, amount) VALUES ($1, $2, $3, $4)`
 	_, err := r.getExecutor(ctx).ExecContext(ctx, query, tx.ID, tx.FromAccountID, tx.ToAccountID, tx.Amount)
 	return err
+}
+
+func (r *PostgresAccountRepository) GetAll(ctx context.Context) ([]domain.Account, error) {
+	query := `SELECT id, owner, balance FROM accounts`
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []domain.Account
+	for rows.Next() {
+		var acc domain.Account
+		if err := rows.Scan(&acc.ID, &acc.Owner, &acc.Balance); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, acc)
+	}
+	return accounts, nil
 }

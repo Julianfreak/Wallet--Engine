@@ -127,3 +127,11 @@ Se ha integrado el flujo completo para la consulta y registro de movimientos fin
 * **Creación Automática de Billeteras:** Al registrarse un nuevo usuario en el sistema (`/register`), se genera de forma transaccional una cuenta bancaria única (`ACC-xxxx`) con un balance inicial predeterminado.
 * **Robustez en la Autenticación JWT:** Unificación y estandarización de la clave secreta compartida entre el módulo de login y el middleware de protección de rutas.
 * **Flexibilidad de Endpoints HTTP:** Actualización del handler de transacciones para soportar operaciones duales (`POST` para transferencias y `GET` para el historial de movimientos).
+
+### 🚀 Características Principales
+
+- **Arquitectura Limpia & Diseño Dirigido por Dominio (DDD):** Separación estricta de capas (Dominio, Aplicación, Infraestructura y Adaptadores HTTP).
+- **Autenticación y Autorización JWT:** Middleware robusto que inyecta la identidad del usuario (`user_id` / email) en el contexto de cada petición HTTP protegida.
+- **Aislamiento de Datos por Propietario:** Las consultas de saldos, dashboard y transacciones filtran estrictamente los registros correspondientes al usuario en sesión.
+- **Transacciones Atómicas Seguras:** Uso de un gestor de transacciones (`TxManager`) para asegurar la consistencia en operaciones financieras críticas (evitando race conditions o estados inconsistentes en PostgreSQL).
+- **Directorio Dinámico de Destinatarios:** Endpoint protegido (`/GET /accounts`) que permite listar las cuentas de otros usuarios registrados para facilitar transferencias fluidas sin necesidad de codificar UUIDs estáticos.
