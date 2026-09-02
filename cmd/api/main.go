@@ -12,7 +12,6 @@ import (
 	"time"
 
 	_ "github.com/Julianfreak/Wallet--Engine/docs"
-	"github.com/Julianfreak/Wallet--Engine/internal/adapters/api"
 	httpAdapter "github.com/Julianfreak/Wallet--Engine/internal/adapters/http"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/logger"
 	"github.com/Julianfreak/Wallet--Engine/internal/adapters/notification"
@@ -70,7 +69,7 @@ func main() {
 	//ctx := context.Background()
 	txManager := repository.NewPostgresTxManager(db)
 	accountRepo := repository.NewPostgresAccountRepository(db)
-	accountHandler := api.NewAccountHandler(accountRepo)
+	accountHandler := httpAdapter.NewAccountHandler(accountRepo)
 	transactionRepo := repository.NewPostgresTransactionRepository(db)
 	userRepo := repository.NewPostgresUserRepository(db)
 	userService := application.NewUserService(userRepo)
@@ -89,7 +88,7 @@ func main() {
 	// Rutas
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/transactions", enableCORS(httpAdapter.AuthMiddleware(transferHandler.HandleTransactions)))
-	http.HandleFunc("/accounts", enableCORS(httpAdapter.AuthMiddleware(accountHandler.GetAccount)))
+	http.HandleFunc("/accounts", enableCORS(httpAdapter.AuthMiddleware(accountHandler.HandleGetAccounts)))
 	http.HandleFunc("/dashboard", enableCORS(httpAdapter.AuthMiddleware(dashboardHandler.HandleDashboard)))
 	http.HandleFunc("/profile", enableCORS(httpAdapter.AuthMiddleware(userHandler.HandleProfile)))
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))

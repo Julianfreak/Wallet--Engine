@@ -2,7 +2,6 @@ package domain
 
 import (
 	"errors"
-	"time"
 )
 
 // Errores de negocio específicos que entenderá cualquier parte de nuestra app
@@ -10,10 +9,9 @@ var ErrInsufficientFunds = errors.New("fondos insuficientes en la cuenta")
 var ErrInvalidAmount = errors.New("el monto debe ser mayor a cero")
 
 type Account struct {
-	ID        string
-	Owner     string
-	Balance   float64
-	CreatedAt time.Time
+	ID      string  `json:"id"`
+	Owner   string  `json:"owner"`
+	Balance float64 `json:"balance"`
 }
 
 // Deposit añade saldo a la cuenta validando que el monto sea lógico

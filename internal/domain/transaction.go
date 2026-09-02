@@ -3,11 +3,11 @@ package domain
 import "time"
 
 type Transaction struct {
-	ID            string
-	FromAccountID string
-	ToAccountID   string
-	Amount        float64
-	CreatedAt     time.Time
+	ID            string    `json:"id"`
+	FromAccountID string    `json:"from_account_id"`
+	ToAccountID   string    `json:"to_account_id"`
+	Amount        float64   `json:"amount"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // NewTransaction es una función constructora que asegura que una transacción

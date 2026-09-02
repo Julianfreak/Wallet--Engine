@@ -1,4 +1,4 @@
-package api
+package http
 
 import (
 	"encoding/json"
@@ -8,9 +8,9 @@ import (
 	"github.com/Julianfreak/Wallet--Engine/internal/domain"
 )
 
-type contextKey string
+/* type contextKey string
 
-const AccountIDKey contextKey = "user_id"
+const AccountIDKey contextKey = "user_id" */
 
 type AccountHandler struct {
 	repo *repository.PostgresAccountRepository
