@@ -126,7 +126,7 @@ func (r *PostgresAccountRepository) GetAll(ctx context.Context) ([]domain.Accoun
 		_ = rows.Close()
 	}()
 
-	var accounts []domain.Account
+	accounts := []domain.Account{}
 	for rows.Next() {
 		var acc domain.Account
 		if err := rows.Scan(&acc.ID, &acc.Owner, &acc.Balance); err != nil {
