@@ -61,7 +61,7 @@ func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) 
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			fmt.Printf("❌ No se encontró ningún registro con el email: '%s'\n", email)
+			fmt.Printf("No se encontró ningún registro con el email: '%s'\n", email)
 			return nil, errors.New("usuario no encontrado precaución")
 		}
 		return nil, err
@@ -84,7 +84,9 @@ func (r *PostgresTransactionRepository) GetByAccountID(ctx context.Context, acco
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var transactions []domain.Transaction
 	for rows.Next() {
@@ -103,7 +105,9 @@ func (r *PostgresAccountRepository) FindByOwner(ctx context.Context, owner strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var accounts []domain.Account
 	for rows.Next() {
@@ -126,7 +130,9 @@ func (r *PostgresTransactionRepository) GetAll(ctx context.Context) ([]domain.Tr
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var transactions []domain.Transaction
 	for rows.Next() {

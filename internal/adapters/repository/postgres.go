@@ -122,7 +122,9 @@ func (r *PostgresAccountRepository) GetAll(ctx context.Context) ([]domain.Accoun
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var accounts []domain.Account
 	for rows.Next() {
