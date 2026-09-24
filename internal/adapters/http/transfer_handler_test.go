@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,7 +19,7 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 		Accounts: map[string]*domain.Account{
 			"A1":           {ID: "A1", Owner: "Julian", Balance: 1000.0},
 			"A2":           {ID: "A2", Owner: "Mercado Libre", Balance: 0.0},
-			"cuenta_pobre": {ID: "cuenta_pobre", Balance: 50.0}, // Añadimos esta para probar fondos insuficientes
+			"cuenta_pobre": {ID: "cuenta_pobre", Owner: "Julian", Balance: 50.0}, // Añadimos esta para probar fondos insuficientes
 		},
 	}
 
@@ -59,7 +60,7 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 			metodo:         http.MethodPut,
 			cuerpoRequest:  `{}`,
 			codigoEsperado: http.StatusMethodNotAllowed,
-			textoEsperado:  "", // Si no valida texto de error en este caso específico
+			textoEsperado:  "",
 		},
 		{
 			nombre:         "Falla por JSON inválido",
@@ -87,6 +88,9 @@ func TestTransferHandler_ValidationShield(t *testing.T) {
 		t.Run(caso.nombre, func(t *testing.T) {
 			payload := []byte(caso.cuerpoRequest)
 			req := httptest.NewRequest(caso.metodo, "/transfers", bytes.NewBuffer(payload))
+
+			req = req.WithContext(context.WithValue(req.Context(), AccountIDKey, "Julian"))
+
 			rec := httptest.NewRecorder()
 
 			handler.HandleTransactions(rec, req)
