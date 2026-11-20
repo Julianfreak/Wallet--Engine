@@ -81,7 +81,6 @@ Wallet-Engine implementa **Logging Estructurado en formato JSON** utilizando el 
 *   **Formato JSON:** Todos los eventos del sistema se emiten estructurados con pares clave-valor, facilitando su indexación y auditoría en plataformas de análisis de registros (como ELK, Datadog o Grafana Loki).
 *   **Niveles de Severidad:** Manejo estricto de niveles (`INFO`, `ERROR`) optimizados para entornos de producción en contenedores Docker.
 
-## 🔐 Autenticación y Seguridad (JWT)
 ## 📖 Documentación de la API (Swagger)
 
 El proyecto cuenta con documentación interactiva mediante Swagger (OpenAPI 3.0). Puedes explorar todos los endpoints disponibles, sus esquemas de solicitud/respuesta y probar las peticiones directamente desde el navegador.
@@ -103,8 +102,7 @@ Si realizas cambios en las anotaciones de los handlers, puedes actualizar la doc
 swag init -g cmd/api/main.go
 ```
 
-
-
+## 🔐 Seguridad y Autenticación
 El motor ahora cuenta con un sistema de autenticación seguro basado en **JSON Web Tokens (JWT)** y contraseñas cifradas con **Bcrypt**.
 
 ### Endpoints Disponibles
