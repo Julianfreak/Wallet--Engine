@@ -1,4 +1,88 @@
 basePath: /
+definitions:
+  application.DashboardData:
+    properties:
+      accounts:
+        items:
+          $ref: '#/definitions/domain.Account'
+        type: array
+      transactions:
+        items:
+          $ref: '#/definitions/domain.Transaction'
+        type: array
+    type: object
+  domain.Account:
+    properties:
+      balance:
+        type: number
+      id:
+        type: string
+      owner:
+        type: string
+    type: object
+  domain.Transaction:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      from_account_id:
+        type: string
+      id:
+        type: string
+      to_account_id:
+        type: string
+    type: object
+  domain.User:
+    properties:
+      balance:
+        type: number
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+    type: object
+  http.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  http.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  http.RegisterRequest:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      password:
+        type: string
+    type: object
+  http.TransferRequest:
+    properties:
+      amount:
+        type: number
+      from_account_id:
+        type: string
+      to_account_id:
+        type: string
+    required:
+    - amount
+    - from_account_id
+    - to_account_id
+    type: object
+  http.TransferResponse:
+    properties:
+      message:
+        type: string
+    type: object
 host: localhost:8082
 info:
   contact: {}
@@ -7,6 +91,32 @@ info:
   version: "1.0"
 paths:
   /accounts:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve una lista de cuentas disponibles para realizar transferencias,
+        excluyendo la cuenta del usuario actual.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Account'
+            type: array
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Listar cuentas disponibles
+      tags:
+      - accounts
+  /accounts/detail:
     get:
       consumes:
       - application/json
@@ -22,41 +132,301 @@ paths:
       - application/json
       responses:
         "200":
-          description: Respuesta exitosa
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/domain.Account'
       summary: Obtiene una cuenta
       tags:
       - accounts
-  /transfers:
-    post:
+  /dashboard:
+    get:
       consumes:
       - application/json
-      description: Transfiere fondos de una cuenta origen a una cuenta destino garantizando
-        la atomicidad de la operación en base de datos.
-      parameters:
-      - description: JSON con origin_id, destination_id y amount
-        in: body
-        name: request
-        required: true
-        schema:
-          type: string
+      description: Devuelve el saldo total y las transacciones recientes del usuario
+        autenticado.
       produces:
       - application/json
       responses:
         "200":
-          description: Transferencia exitosa
+          description: OK
           schema:
-            type: string
-        "400":
-          description: Datos inválidos o fondos insuficientes
+            $ref: '#/definitions/application.DashboardData'
+        "401":
+          description: No autorizado
           schema:
-            type: string
-        "500":
-          description: Error interno del servidor
-          schema:
-            type: string
-      summary: Realiza una transferencia
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Obtener datos del dashboard
       tags:
-      - transfers
+      - dashboard
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica a un usuario y devuelve un token JWT.
+      parameters:
+      - description: Credenciales de acceso
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token JWT
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Credenciales inválidas
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Iniciar sesión
+      tags:
+      - auth
+  /profile:
+    delete:
+      consumes:
+      - application/json
+      - application/json
+      - application/json
+      description: |-
+        Devuelve el perfil del usuario autenticado.
+        Actualiza el email o contraseña del usuario autenticado.
+        Elimina de forma permanente el perfil del usuario autenticado.
+      parameters:
+      - description: Nuevos datos (email, new_password)
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: Cuenta eliminada exitosamente
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Formato inválido
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Eliminar cuenta de usuario
+      tags:
+      - profile
+      - profile
+      - profile
+    get:
+      consumes:
+      - application/json
+      - application/json
+      - application/json
+      description: |-
+        Devuelve el perfil del usuario autenticado.
+        Actualiza el email o contraseña del usuario autenticado.
+        Elimina de forma permanente el perfil del usuario autenticado.
+      parameters:
+      - description: Nuevos datos (email, new_password)
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: Cuenta eliminada exitosamente
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Formato inválido
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Eliminar cuenta de usuario
+      tags:
+      - profile
+      - profile
+      - profile
+    put:
+      consumes:
+      - application/json
+      - application/json
+      - application/json
+      description: |-
+        Devuelve el perfil del usuario autenticado.
+        Actualiza el email o contraseña del usuario autenticado.
+        Elimina de forma permanente el perfil del usuario autenticado.
+      parameters:
+      - description: Nuevos datos (email, new_password)
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: Cuenta eliminada exitosamente
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Formato inválido
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: No autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Eliminar cuenta de usuario
+      tags:
+      - profile
+      - profile
+      - profile
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo usuario y su cuenta asociada en la plataforma.
+      parameters:
+      - description: Datos del registro
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Usuario registrado exitosamente
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Error en la solicitud
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Registrar un nuevo usuario
+      tags:
+      - auth
+  /transactions:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene el historial de transacciones del usuario.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Transaction'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar transacciones
+      tags:
+      - transactions
+    post:
+      consumes:
+      - application/json
+      description: Transfiere fondos entre cuentas.
+      parameters:
+      - description: Datos de la transferencia
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.TransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.TransferResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Realizar una transferencia
+      tags:
+      - transactions
+securityDefinitions:
+  BearerAuth:
+    description: Escribe 'Bearer ' seguido de tu token JWT.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

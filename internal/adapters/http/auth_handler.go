@@ -26,6 +26,15 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+// @Summary Registrar un nuevo usuario
+// @Description Crea un nuevo usuario y su cuenta asociada en la plataforma.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Datos del registro"
+// @Success 201 {object} map[string]string "Usuario registrado exitosamente"
+// @Failure 400 {object} map[string]string "Error en la solicitud"
+// @Router /register [post]
 func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "método no permitido", http.StatusMethodNotAllowed)
@@ -48,6 +57,15 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "usuario registrado exitosamente"})
 }
 
+// @Summary Iniciar sesión
+// @Description Autentica a un usuario y devuelve un token JWT.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Credenciales de acceso"
+// @Success 200 {object} map[string]string "Token JWT"
+// @Failure 401 {object} map[string]string "Credenciales inválidas"
+// @Router /login [post]
 func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "método no permitido", http.StatusMethodNotAllowed)

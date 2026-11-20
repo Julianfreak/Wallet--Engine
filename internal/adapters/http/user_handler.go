@@ -15,6 +15,37 @@ func NewUserHandler(service *application.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
+// HandleProfile gestiona el perfil del usuario (GET, PUT, DELETE)
+// @Summary Obtener perfil del usuario
+// @Description Devuelve el perfil del usuario autenticado.
+// @Tags profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.User
+// @Failure 401 {object} map[string]string "No autorizado"
+// @Router /profile [get]
+//
+// @Summary Actualizar perfil del usuario
+// @Description Actualiza el email o contraseña del usuario autenticado.
+// @Tags profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body map[string]string true "Nuevos datos (email, new_password)"
+// @Success 200 {object} map[string]string "Perfil actualizado exitosamente"
+// @Failure 400 {object} map[string]string "Formato inválido"
+// @Router /profile [put]
+//
+// @Summary Eliminar cuenta de usuario
+// @Description Elimina de forma permanente el perfil del usuario autenticado.
+// @Tags profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]string "Cuenta eliminada exitosamente"
+// @Failure 401 {object} map[string]string "No autorizado"
+// @Router /profile [delete]
 func (h *UserHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

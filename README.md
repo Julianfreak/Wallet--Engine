@@ -82,6 +82,28 @@ Wallet-Engine implementa **Logging Estructurado en formato JSON** utilizando el 
 *   **Niveles de Severidad:** Manejo estricto de niveles (`INFO`, `ERROR`) optimizados para entornos de producción en contenedores Docker.
 
 ## 🔐 Autenticación y Seguridad (JWT)
+## 📖 Documentación de la API (Swagger)
+
+El proyecto cuenta con documentación interactiva mediante Swagger (OpenAPI 3.0). Puedes explorar todos los endpoints disponibles, sus esquemas de solicitud/respuesta y probar las peticiones directamente desde el navegador.
+
+### Acceso a la documentación
+Una vez que el servidor esté en ejecución, accede a:
+[http://localhost:8082/swagger/index.html](http://localhost:8082/swagger/index.html)
+
+### Autenticación en Swagger
+Para probar los endpoints protegidos desde la interfaz de Swagger:
+1. Haz clic en el botón **Authorize** (el candado).
+2. En el campo `Value`, ingresa `Bearer ` seguido de tu token JWT (obtenido al hacer login).
+3. Haz clic en **Authorize** y luego en **Close**.
+
+### Regenerar la documentación
+Si realizas cambios en las anotaciones de los handlers, puedes actualizar la documentación ejecutando:
+```bash
+# Asegúrate de tener swag instalado: go install github.com/swaggo/swag/cmd/swag@latest
+swag init -g cmd/api/main.go
+```
+
+
 
 El motor ahora cuenta con un sistema de autenticación seguro basado en **JSON Web Tokens (JWT)** y contraseñas cifradas con **Bcrypt**.
 

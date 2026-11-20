@@ -26,8 +26,8 @@ func NewAccountHandler(repo *repository.PostgresAccountRepository) *AccountHandl
 // @Accept json
 // @Produce json
 // @Param id query string true "ID de la cuenta"
-// @Success 200 {string} string "Respuesta exitosa"
-// @Router /accounts [get]
+// @Success 200 {object} domain.Account
+// @Router /accounts/detail [get]
 func (h *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
@@ -51,6 +51,15 @@ func (h *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleGetAccounts lista todas las cuentas disponibles para transferencias (excluyendo al usuario actual)
+// @Summary Listar cuentas disponibles
+// @Description Devuelve una lista de cuentas disponibles para realizar transferencias, excluyendo la cuenta del usuario actual.
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} domain.Account
+// @Failure 401 {object} map[string]string "No autorizado"
+// @Router /accounts [get]
 func (h *AccountHandler) HandleGetAccounts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)

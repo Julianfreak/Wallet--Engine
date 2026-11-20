@@ -37,17 +37,7 @@ func NewTransferHandler(service *application.TransferService) *TransferHandler {
 	return &TransferHandler{service: service}
 }
 
-// HandleTransfer procesa la petición POST /transfers
-// @Summary Realiza una transferencia
-// @Description Transfiere fondos de una cuenta origen a una cuenta destino garantizando la atomicidad de la operación en base de datos.
-// @Tags transfers
-// @Accept json
-// @Produce json
-// @Param request body string true "JSON con origin_id, destination_id y amount"
-// @Success 200 {string} string "Transferencia exitosa"
-// @Failure 400 {string} string "Datos inválidos o fondos insuficientes"
-// @Failure 500 {string} string "Error interno del servidor"
-// @Router /transfers [post]
+// HandleTransactions procesa la petición GET/POST /transactions
 func (h *TransferHandler) HandleTransactions(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
@@ -60,6 +50,16 @@ func (h *TransferHandler) HandleTransactions(w http.ResponseWriter, r *http.Requ
 }
 
 // handleCreateTransfer procesa la lógica interna para el POST /transactions
+// @Summary Realizar una transferencia
+// @Description Transfiere fondos entre cuentas.
+// @Tags transactions
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body TransferRequest true "Datos de la transferencia"
+// @Success 200 {object} TransferResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /transactions [post]
 func (h *TransferHandler) handleCreateTransfer(w http.ResponseWriter, r *http.Request) {
 
 	var req TransferRequest
@@ -100,7 +100,15 @@ func (h *TransferHandler) handleCreateTransfer(w http.ResponseWriter, r *http.Re
 }
 
 // handleGetTransactions procesa la lógica interna para el GET /transactions
-// En internal/adapters/http/transfer_handler.go
+// @Summary Listar transacciones
+// @Description Obtiene el historial de transacciones del usuario.
+// @Tags transactions
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} domain.Transaction
+// @Failure 401 {object} ErrorResponse
+// @Router /transactions [get]
 func (h *TransferHandler) handleGetTransactions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

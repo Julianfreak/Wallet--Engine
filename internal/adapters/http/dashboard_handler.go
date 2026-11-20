@@ -16,6 +16,15 @@ func NewDashboardHandler(service *application.DashboardService) *DashboardHandle
 }
 
 // HandleDashboard procesa la petición GET /dashboard
+// @Summary Obtener datos del dashboard
+// @Description Devuelve el saldo total y las transacciones recientes del usuario autenticado.
+// @Tags dashboard
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} application.DashboardData
+// @Failure 401 {object} map[string]string "No autorizado"
+// @Router /dashboard [get]
 func (h *DashboardHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 	// 1. Extraer el correo del usuario autenticado desde el contexto del middleware
 	userEmail, ok := r.Context().Value(AccountIDKey).(string)

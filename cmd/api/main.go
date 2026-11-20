@@ -28,6 +28,11 @@ import (
 // @description Motor de billetera digital con transacciones atómicas.
 // @host localhost:8082
 // @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Escribe 'Bearer ' seguido de tu token JWT.
 func main() {
 	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -92,35 +97,11 @@ func main() {
 	http.HandleFunc("/dashboard", enableCORS(httpAdapter.AuthMiddleware(dashboardHandler.HandleDashboard)))
 	http.HandleFunc("/profile", enableCORS(httpAdapter.AuthMiddleware(userHandler.HandleProfile)))
 	http.HandleFunc("/register", enableCORS(authHandler.HandleRegister))
-	http.HandleFunc("/login", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, `{"error": "Método no permitido"}`, http.StatusMethodNotAllowed)
-			return
-		}
-
-		var req struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, `{"error": "formato JSON inválido"}`, http.StatusBadRequest)
-			return
-		}
-
-		// El login SOLO debe validar credenciales y generar el token
-		token, err := authService.Login(r.Context(), req.Email, req.Password)
-		if err != nil {
-			http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusUnauthorized)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{"token": token})
-	}))
+	http.HandleFunc("/login", enableCORS(authHandler.HandleLogin))
 
 	// NUEVA RUTA: La página web de Swagger
 	http.HandleFunc("/swagger/", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8082/swagger/doc.json"),
+		httpSwagger.URL("/swagger/doc.json"), // Ruta relativa para mayor compatibilidad
 	))
 
 	server := &http.Server{
